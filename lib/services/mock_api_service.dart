@@ -421,13 +421,15 @@ class MockApiService implements ApiService {
     return enrollment;
   }
 
-  /// Runs prerequisite -> credit -> clash -> seat for all [sections], then
-  /// enrols in all of them, or throws and changes nothing.
+  /// Runs prerequisite -> seat -> clashes for all [sections], then enrols in
+  /// all of them, or throws and changes nothing. Class-time and exam-day
+  /// clashes throw a [ConflictException] unless [acceptConflicts] is true.
   List<Enrollment> _validateAndCommit(
     Student student,
     List<CourseSection> sections, {
     required String by,
     required bool checkLock,
+    bool acceptConflicts = false,
   }) {
     if (sections.isEmpty) throw const ApiException('Select at least one course.');
     final active = _active(student.id);
@@ -471,24 +473,6 @@ class MockApiService implements ApiService {
       }
     }
 
-    // Credit limit.
-    final current = active.fold<double>(0, (sum, e) => sum + e.credits);
-    final adding = sections.fold<double>(0, (sum, s) => sum + s.credits);
-    final creditError = AdvisingRules.creditLimitError(current, adding);
-    if (creditError != null) throw ApiException(creditError);
-
-    // Time clash.
-    final existing = <String, List<ClassSlot>>{
-      for (final e in active) e.label: _catalog.slotsFor(e.courseCode, e.sectionNo),
-    };
-    final adds = <String, List<ClassSlot>>{
-      for (final s in sections)
-        Formatters.sectionLabel(s.courseCode, (s.nextPart ?? s.parts.first).sectionNo):
-            _catalog.slotsFor(s.courseCode, (s.nextPart ?? s.parts.first).sectionNo),
-    };
-    final clash = AdvisingRules.clashError(existing, adds);
-    if (clash != null) throw ApiException(clash);
-
     // Seats.
     for (final s in sections) {
       if (_section(s.id).isFull) {
@@ -496,9 +480,40 @@ class MockApiService implements ApiService {
       }
     }
 
+    // Clashes only warn. The user can accept them and enrol anyway.
+    if (!acceptConflicts) {
+      final conflicts = _conflictsOf(active, sections);
+      if (conflicts.isNotEmpty) throw ConflictException(conflicts);
+    }
+
     final at = _now;
     return [
       for (final s in sections) _commit(student, _section(s.id), typeOf(s), by, at),
+    ];
+  }
+
+  /// Class-time and exam-day clashes of [sections] with the courses already
+  /// taken and with each other.
+  List<String> _conflictsOf(List<Enrollment> active, List<CourseSection> sections) {
+    final existingSlots = <String, List<ClassSlot>>{
+      for (final e in active) e.label: _catalog.slotsFor(e.courseCode, e.sectionNo),
+    };
+    final addSlots = <String, List<ClassSlot>>{
+      for (final s in sections)
+        Formatters.sectionLabel(s.courseCode, (s.nextPart ?? s.parts.first).sectionNo):
+            _catalog.slotsFor(s.courseCode, (s.nextPart ?? s.parts.first).sectionNo),
+    };
+    final existingExams = <String, int>{
+      for (final e in active)
+        if (_catalog.examDay(e.courseCode, e.semesterNo) case final day?) e.courseCode: day,
+    };
+    final addExams = <String, int>{
+      for (final s in sections)
+        if (_catalog.examDay(s.courseCode, s.semesterNo) case final day?) s.courseCode: day,
+    };
+    return [
+      ...AdvisingRules.timeClashes(existingSlots, addSlots),
+      ...AdvisingRules.examClashes(existingExams, addExams),
     ];
   }
 
@@ -677,7 +692,8 @@ class MockApiService implements ApiService {
   }
 
   @override
-  Future<List<Enrollment>> enrollSelected(String studentId, List<String> sectionIds) async {
+  Future<List<Enrollment>> enrollSelected(String studentId, List<String> sectionIds,
+      {bool acceptConflicts = false}) async {
     await _delay();
     final student = _base(studentId);
     if (!student.clearanceStatus.canAdvise) {
@@ -691,7 +707,8 @@ class MockApiService implements ApiService {
       throw ApiException('Regular advising is for Semester ${student.semesterNo} only. '
           'Use the Extra course tab for other semesters.');
     }
-    final result = _validateAndCommit(student, sections, by: studentId, checkLock: true);
+    final result = _validateAndCommit(student, sections,
+        by: studentId, checkLock: true, acceptConflicts: acceptConflicts);
     _log(_staffUser(studentId), AuditAction.enroll, studentId,
         'Enrolled in ${result.map((e) => e.label).join(', ')}');
     return result;
@@ -699,7 +716,8 @@ class MockApiService implements ApiService {
 
   @override
   Future<List<Enrollment>> staffAdvise(
-      AppUser actor, String studentId, List<String> sectionIds) async {
+      AppUser actor, String studentId, List<String> sectionIds,
+      {bool acceptConflicts = false}) async {
     await _delay();
     if (!actor.isStaff) throw const ApiException('Only faculty or the Dean can do this.');
     final student = _base(studentId);
@@ -709,12 +727,23 @@ class MockApiService implements ApiService {
           'This student is Not cleared. Only the Dean can advise without clearance.');
     }
     final sections = sectionIds.map(_section).toList();
+    // Staff follow the windows too: regular courses need the regular window,
+    // other-semester (extra) courses need the extra window.
+    for (final s in sections) {
+      final extra = s.semesterNo != student.semesterNo;
+      if (extra ? !_windows.extraOpen : !_windows.regularOpen) {
+        throw ApiException(extra
+            ? 'The extra course window is closed.'
+            : 'The regular advising window is closed.');
+      }
+    }
     for (final s in sections) {
       if (!_owns(actor, s)) {
         throw ApiException('${s.label} is not your course. You can only add your own courses.');
       }
     }
-    final result = _validateAndCommit(student, sections, by: actor.id, checkLock: true);
+    final result = _validateAndCommit(student, sections,
+        by: actor.id, checkLock: true, acceptConflicts: acceptConflicts);
     if (bypass) {
       _log(actor, AuditAction.deanBypass, studentId,
           'Advised without clearance (${student.clearanceStatus.label})',
@@ -845,6 +874,7 @@ class MockApiService implements ApiService {
     required RequestKind kind,
     required RequestReason reason,
     String comment = '',
+    bool acceptConflicts = false,
   }) async {
     await _delay();
     final student = _base(studentId);
@@ -866,6 +896,10 @@ class MockApiService implements ApiService {
       }
       if (enrolled.isNotEmpty) throw ApiException('${s.courseCode} is already in your courses.');
       if (s.isFull) throw ApiException('${s.label} has no vacant seat.');
+      if (!acceptConflicts) {
+        final conflicts = _conflictsOf(_active(studentId), [s]);
+        if (conflicts.isNotEmpty) throw ConflictException(conflicts);
+      }
     } else if (!enrolled.any((e) => e.type == EnrollmentType.extra)) {
       throw const ApiException('You can only request to drop an extra course.');
     }
@@ -918,11 +952,17 @@ class MockApiService implements ApiService {
     if (!r.isPending) throw ApiException('This request is already ${r.status.label}.');
     final s = _section(r.sectionId);
     if (!_owns(actor, s)) throw ApiException('${s.label} is not your course.');
+    // Rejecting is always possible; approving needs the extra course window.
+    if (approve && !_windows.extraOpen) {
+      throw const ApiException('The extra course window is closed. You can still reject.');
+    }
 
     var status = RequestStatus.rejected;
     if (approve) {
       if (r.kind == RequestKind.add) {
-        _validateAndCommit(_base(r.studentId), [s], by: actor.id, checkLock: false);
+        // The student accepted any clash when sending the request.
+        _validateAndCommit(_base(r.studentId), [s],
+            by: actor.id, checkLock: false, acceptConflicts: true);
         status = RequestStatus.enrolled;
       } else {
         final e = _active(r.studentId).where((e) => e.courseCode == r.courseCode);

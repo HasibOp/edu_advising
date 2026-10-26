@@ -10,8 +10,9 @@ class AppConfig {
   static const String appName = 'EDU Advising';
   static const String currentTerm = 'Fall 2026';
 
-  /// Regular and extra courses together.
-  static const double maxCredits = 18;
+  /// What a room holds. Seat changes cannot go above this.
+  static const int theoryRoomCapacity = 35;
+  static const int labRoomCapacity = 28;
 
   /// The Dean surface appears for this faculty short form.
   static const String deanShortForm = 'Dr. MK';
@@ -27,9 +28,9 @@ class AppLinks {
   static const String advisingInfoPortal = 'https://advising.eastdelta.edu.bd';
   static const String ePaymentPortal = 'https://epayment.eastdelta.edu.bd';
 
-  /// TODO(team): replace with the direct Bank Deposit Slip Upload form link.
-  /// Until then this opens the clearance page, which links to the form.
-  static const String uploadDepositForm = clearancePortal;
+  /// Bank Deposit Slip Upload form.
+  static const String uploadDepositForm =
+      'https://docs.google.com/forms/d/e/1FAIpQLSceCK_OXxBy7L4lWUthfKzxx2b28H2T5CKdYbsvnwktX_WIoQ/viewform?pli=1';
 
   static Future<void> open(BuildContext context, String url) async {
     final ok = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)

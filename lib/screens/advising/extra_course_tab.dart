@@ -315,19 +315,30 @@ class _RequestSheetState extends State<_RequestSheet> {
 
   Future<void> _send() async {
     setState(() => _sending = true);
-    final ok = await runWithFeedback(
-      context,
-      () => context.read<AdvisingProvider>().sendRequest(
-            sectionId: widget.sectionId,
-            kind: widget.kind,
-            reason: _reason!,
-            comment: _comment.text,
-          ),
-      success: 'Request sent to the course faculty and the Dean',
-    );
+    final advising = context.read<AdvisingProvider>();
+    var sent = false;
+    try {
+      // A clash is shown as an alert; the student may still send the request.
+      final request = await runAllowingConflicts(
+        context,
+        (accept) => advising.sendRequest(
+          sectionId: widget.sectionId,
+          kind: widget.kind,
+          reason: _reason!,
+          comment: _comment.text,
+          acceptConflicts: accept,
+        ),
+      );
+      sent = request != null;
+      if (sent && mounted) {
+        showAppSnackBar(context, 'Request sent to the course faculty and the Dean');
+      }
+    } catch (e) {
+      if (mounted) showAppSnackBar(context, errorText(e), isError: true);
+    }
     if (!mounted) return;
     setState(() => _sending = false);
-    if (ok) Navigator.pop(context, true);
+    if (sent) Navigator.pop(context, true);
   }
 
   @override

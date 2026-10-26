@@ -4,7 +4,9 @@ import 'package:edu_advising/models/enrollment.dart';
 import 'package:edu_advising/models/extra_request.dart';
 import 'package:edu_advising/models/portal.dart';
 import 'package:edu_advising/models/student.dart';
+import 'package:edu_advising/services/advising_rules.dart';
 import 'package:edu_advising/services/api_service.dart';
+import 'package:edu_advising/services/catalog.dart';
 import 'package:edu_advising/services/mock_api_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -189,5 +191,126 @@ void main() {
     expect(() => api.changeSeats(trina, other.id, 30), throwsA(isA<ApiException>()));
     final changed = await api.changeSeats(trina, s.id, 30);
     expect(changed.capacity, 30);
+  });
+
+  test('Revoke makes a cleared student Not cleared and blocks advising', () async {
+    final s = await section('CSE 459', 10, 3);
+    final updated = await api.setClearance(admin, '233000001', ClearanceAction.revoke);
+    expect(updated.clearanceStatus, ClearanceStatus.notCleared);
+    expect(() => api.enrollSelected('233000001', [s.id]), throwsA(isA<ApiException>()));
+    expect(() => api.staffAdvise(trina, '233000001', [s.id]), throwsA(isA<ApiException>()));
+  });
+
+  test('staff advising respects the advising windows', () async {
+    final w = await api.fetchWindows();
+    await api.updateWindows(admin, w.copyWith(regularOpen: false));
+    final mine = await section('CSE 463', 10, 3);
+    await expectLater(api.staffAdvise(trina, '233000001', [mine.id]),
+        throwsA(predicate((e) => e.toString().contains('regular advising window'))));
+    // The Dean skips clearance, not the window.
+    await expectLater(api.staffAdvise(dean, '233000001', [mine.id]), throwsA(isA<ApiException>()));
+    expect(await api.fetchEnrollments('233000001'), isEmpty);
+
+    await api.updateWindows(admin, w.copyWith(regularOpen: true));
+    expect(await api.staffAdvise(trina, '233000001', [mine.id]), hasLength(1));
+  });
+
+  test('approving an extra request needs the extra window; rejecting does not', () async {
+    final s = await section('CSE 225', 5, 6);
+    final r = await api.createExtraRequest(
+        studentId: '233000006', sectionId: s.id, kind: RequestKind.add, reason: RequestReason.retake);
+    final w = await api.fetchWindows();
+    await api.updateWindows(admin, w.copyWith(extraOpen: false));
+    await expectLater(api.decideExtraRequest(trina, r.id, true, ''), throwsA(isA<ApiException>()));
+    expect((await api.fetchEnrollments('233000006')), isEmpty);
+    final rejected = await api.decideExtraRequest(trina, r.id, false, 'Window closed');
+    expect(rejected.status, RequestStatus.rejected);
+  });
+
+  test('there is no credit limit', () async {
+    // Semester 10 section 3 plus all of Semester 9 section 1 as extra courses:
+    // far above the old limit of 21 credits. (Clashes are accepted here.)
+    await api.enrollSelected('233000001', [for (final s in await group(10, 3)) s.id]);
+    final extra = [
+      for (final s in (await api.fetchSections(semesterNo: 9)).where((s) => s.groupNo == 1)) s.id
+    ];
+    final added = await api.staffAdvise(dean, '233000001', extra, acceptConflicts: true);
+    expect(added, hasLength(extra.length));
+    final total = (await api.fetchEnrollments('233000001')).fold<double>(0, (a, e) => a + e.credits);
+    expect(total, greaterThan(21));
+  });
+
+  /// A Semester 10 course and a Semester 9 course that meet at the same time.
+  Future<(CourseSection, CourseSection)> clashingPair() async {
+    final mine = await group(10, 3);
+    final other = await api.fetchSections(semesterNo: 9);
+    for (final a in mine) {
+      for (final b in other) {
+        final clash = AdvisingRules.clashError(
+          {a.label: Catalog.instance.slotsFor(a.courseCode, a.parts.first.sectionNo)},
+          {b.label: Catalog.instance.slotsFor(b.courseCode, b.parts.first.sectionNo)},
+        );
+        if (clash != null) return (a, b);
+      }
+    }
+    fail('the demo data has no clashing pair to test with');
+  }
+
+  test('a class-time clash warns first and enrols only when accepted', () async {
+    final (a, b) = await clashingPair();
+    await api.enrollSelected('233000001', [a.id]);
+
+    final before = (await api.fetchEnrollments('233000001')).length;
+    await expectLater(
+      api.staffAdvise(dean, '233000001', [b.id]),
+      throwsA(isA<ConflictException>()
+          .having((e) => e.conflicts.first, 'first', startsWith('Class time:'))),
+    );
+    expect((await api.fetchEnrollments('233000001')).length, before); // nothing saved
+
+    final added = await api.staffAdvise(dean, '233000001', [b.id], acceptConflicts: true);
+    expect(added.single.type, EnrollmentType.extra);
+    expect((await api.fetchEnrollments('233000001')).length, before + 1);
+  });
+
+  test('an extra request with a clash warns, then goes through when accepted', () async {
+    final (a, b) = await clashingPair();
+    await api.enrollSelected('233000001', [a.id]);
+    Future<ExtraRequest> send({bool accept = false}) => api.createExtraRequest(
+        studentId: '233000001',
+        sectionId: b.id,
+        kind: RequestKind.add,
+        reason: RequestReason.other,
+        acceptConflicts: accept);
+
+    await expectLater(send(), throwsA(isA<ConflictException>()));
+    expect(await api.fetchMyRequests('233000001'), isEmpty);
+    final r = await send(accept: true);
+    expect(r.status, RequestStatus.pending);
+  });
+
+  test('an exam on the same day is a warning too', () async {
+    // 233000006 is in Semester 11: HUM 203 is exam Day 4, like CSE 225 (Sem 5).
+    final hum = (await api.fetchSections(semesterNo: 11)).firstWhere((s) => s.courseCode == 'HUM 203');
+    await api.enrollSelected('233000006', [hum.id]);
+    final extra = await section('CSE 225', 5, 6);
+    await expectLater(
+      api.staffAdvise(trina, '233000006', [extra.id], acceptConflicts: false),
+      throwsA(isA<ConflictException>().having(
+          (e) => e.conflicts.any((c) => c.startsWith('Exam day:') && c.contains('Day 4')),
+          'exam clash',
+          isTrue)),
+    );
+    final added = await api.staffAdvise(trina, '233000006', [extra.id], acceptConflicts: true);
+    expect(added.single.courseCode, 'CSE 225');
+  });
+
+  test('a hard error still blocks even when clashes are accepted', () async {
+    // 233000005 failed CSE 327: the prerequisite of CSE 443 is not a warning.
+    final s = await section('CSE 443', 10, 3);
+    await expectLater(
+      api.enrollSelected('233000005', [s.id], acceptConflicts: true),
+      throwsA(predicate((e) => e is ApiException && e is! ConflictException)),
+    );
   });
 }

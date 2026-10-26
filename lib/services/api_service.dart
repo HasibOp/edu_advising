@@ -14,6 +14,15 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
+/// Class-time or exam-day clashes. Nothing was saved. The caller shows
+/// [conflicts] as an alert and, if the user agrees, repeats the same call with
+/// `acceptConflicts: true`. Clashes are a warning, never a block.
+class ConflictException extends ApiException {
+  const ConflictException(this.conflicts)
+      : super('Some of these courses clash with each other.');
+  final List<String> conflicts;
+}
+
 enum ClearanceAction { give, revoke, special }
 
 /// Everything the screens need from the backend.
@@ -48,12 +57,16 @@ abstract class ApiService {
   Future<List<Enrollment>> fetchEnrollments(String studentId);
   Future<List<Enrollment>> fetchSectionEnrollments(String sectionId);
 
-  /// Student self-advising. One all-or-nothing transaction.
-  Future<List<Enrollment>> enrollSelected(String studentId, List<String> sectionIds);
+  /// Student self-advising. One all-or-nothing transaction. Throws a
+  /// [ConflictException] on a class-time or exam-day clash unless
+  /// [acceptConflicts] is true.
+  Future<List<Enrollment>> enrollSelected(String studentId, List<String> sectionIds,
+      {bool acceptConflicts = false});
 
   /// Faculty (own courses) or Dean (any course, clearance bypass logged).
   Future<List<Enrollment>> staffAdvise(
-      AppUser actor, String studentId, List<String> sectionIds);
+      AppUser actor, String studentId, List<String> sectionIds,
+      {bool acceptConflicts = false});
   Future<void> staffDrop(AppUser actor, String enrollmentId);
 
   // Waitlist
@@ -71,6 +84,7 @@ abstract class ApiService {
     required RequestKind kind,
     required RequestReason reason,
     String comment = '',
+    bool acceptConflicts = false,
   });
   Future<ExtraRequest> withdrawExtraRequest(String requestId);
   Future<ExtraRequest> decideExtraRequest(

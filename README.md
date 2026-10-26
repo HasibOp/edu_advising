@@ -80,7 +80,9 @@ tool/generate_data.py   rebuilds lib/data from resources/pdfs
 ## Rules implemented (plan sections 3-6)
 
 - Validation order: clearance -> window -> section lock -> prerequisite ->
-  credit limit (18) -> time clash -> seat. Enrolment is all-or-nothing.
+  seat. Enrolment is all-or-nothing. There is no credit limit.
+- Class-time clashes and same-day exams only warn: an alert asks the user to
+  go back or "Take anyway".
 - Enrolment ID `{studentId}_{sectionId}`: a double tap cannot enrol twice.
 - Section lock: after the first regular course, other sections are view-only;
   dropping everything clears it.
@@ -92,9 +94,9 @@ tool/generate_data.py   rebuilds lib/data from resources/pdfs
   Pending, faculty or Dean approves (enrols as EXTRA) or rejects.
 - Administrator: Give / Revoke / Special clearance, Regular and Extra windows.
 - Seat change: not below current enrolment, not above room capacity
-  (room sizes are not in the documents: theory 45, lab 30 assumed).
-- `test/concurrency_test.dart`: 50 parallel requests on a 40-seat section ->
-  exactly 40 succeed. Run the same test against Firestore later.
+  (room sizes from the team: theory 35, lab 28).
+- `test/concurrency_test.dart`: 50 parallel requests on a 35-seat section ->
+  exactly 35 succeed. Run the same test against Firestore later.
 
 ## Backend phase: what to replace
 

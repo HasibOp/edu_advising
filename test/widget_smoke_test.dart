@@ -1,4 +1,7 @@
 import 'package:edu_advising/main.dart';
+import 'package:edu_advising/models/course.dart';
+import 'package:edu_advising/services/advising_rules.dart';
+import 'package:edu_advising/services/catalog.dart';
 import 'package:edu_advising/services/mock_api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,11 +9,11 @@ import 'package:flutter_test/flutter_test.dart';
 /// Opens every screen of every role on a phone-sized screen. Any layout
 /// overflow or exception fails the test.
 void main() {
-  Future<void> start(WidgetTester tester) async {
+  Future<void> start(WidgetTester tester, {MockApiService? api}) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.6;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(EduAdvisingApp(api: MockApiService(latency: Duration.zero)));
+    await tester.pumpWidget(EduAdvisingApp(api: api ?? MockApiService(latency: Duration.zero)));
     await tester.pumpAndSettle();
   }
 
@@ -184,5 +187,86 @@ void main() {
         await tester.pumpAndSettle();
       }
     }
+  });
+
+  /// A Semester 10 course (section group 3) and a vacant course of another
+  /// semester that meet at the same time.
+  Future<(CourseSection, CourseSection)> clashingPair(MockApiService api) async {
+    final all = await api.fetchSections();
+    for (final a in all.where((s) => s.semesterNo == 10 && s.groupNo == 3)) {
+      for (final b in all.where((s) => s.semesterNo != 10 && !s.isFull)) {
+        final clash = AdvisingRules.clashError(
+          {a.label: Catalog.instance.slotsFor(a.courseCode, a.parts.first.sectionNo)},
+          {b.label: Catalog.instance.slotsFor(b.courseCode, b.parts.first.sectionNo)},
+        );
+        if (clash != null) return (a, b);
+      }
+    }
+    fail('no clashing pair in the demo data');
+  }
+
+  Future<void> sendExtraRequest(WidgetTester tester, CourseSection b) async {
+    await tester.tap(find.text('View advising'));
+    await tester.pumpAndSettle();
+    // Already advised: the button reads "Go to Advising".
+    await tester.tap(find.text('Go to Advising'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Extra course'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sem ${b.semesterNo}'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, b.label);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Request').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Retake'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Send request'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('student: a class-time clash shows an alert and can be accepted', (tester) async {
+    final api = MockApiService(latency: Duration.zero);
+    // The mock waits on timers, so calls made outside the widget tree need
+    // real async.
+    final (a, b) = (await tester.runAsync(() async {
+      final pair = await clashingPair(api);
+      await api.enrollSelected('233000001', [pair.$1.id]);
+      return pair;
+    }))!;
+    await start(tester, api: api);
+    await login(tester, 'Student', '233000001');
+    await sendExtraRequest(tester, b);
+
+    expect(find.text('Clash found'), findsOneWidget);
+    expect(find.textContaining('Class time:'), findsWidgets);
+    expect(find.text('Take anyway'), findsOneWidget);
+    expect(await tester.runAsync(() => api.fetchMyRequests('233000001')), isEmpty); // nothing saved yet
+
+    await tester.tap(find.text('Take anyway'));
+    await tester.pumpAndSettle();
+    expect(find.text('Clash found'), findsNothing);
+    expect(find.textContaining('Request sent'), findsOneWidget);
+    expect(await tester.runAsync(() => api.fetchMyRequests('233000001')), hasLength(1));
+  });
+
+  testWidgets('student: going back from a clash alert sends nothing', (tester) async {
+    final api = MockApiService(latency: Duration.zero);
+    // The mock waits on timers, so calls made outside the widget tree need
+    // real async.
+    final (a, b) = (await tester.runAsync(() async {
+      final pair = await clashingPair(api);
+      await api.enrollSelected('233000001', [pair.$1.id]);
+      return pair;
+    }))!;
+    await start(tester, api: api);
+    await login(tester, 'Student', '233000001');
+    await sendExtraRequest(tester, b);
+
+    expect(find.text('Clash found'), findsOneWidget);
+    await tester.tap(find.text('Go back'));
+    await tester.pumpAndSettle();
+    expect(find.text('Clash found'), findsNothing);
+    expect(await tester.runAsync(() => api.fetchMyRequests('233000001')), isEmpty);
   });
 }

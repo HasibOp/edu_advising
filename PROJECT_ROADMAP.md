@@ -21,9 +21,9 @@ Status labels:
 | Phase | What | Due (Plan §1) | Status |
 |---|---|---|---|
 | 0 | Tooling and project setup | n/a | DONE |
-| 1 | Real university data in the app | n/a | DONE (prerequisites need review) |
+| 1 | Real university data in the app | n/a | DONE |
 | 2 | Frontend, all screens on dummy data (Plan §17 Phase A) | **01 Nov 2026** | DONE, with gaps listed in §2.4 |
-| 3 | Frontend wrap-up before submission | **01 Nov 2026** | TODO |
+| 3 | Frontend wrap-up before submission | **01 Nov 2026** | DONE in code (27 Oct 2026); phone test, PDF spot-check and screenshots remain, see §3 |
 | 4 | Backend: Firebase, database, CRUD (Plan §17 Phase B) | **13 Dec 2026** | TODO (nothing started) |
 | 5 | Report, demo video, viva (Plan §17 Phase C) | **12-13 Dec 2026** | TODO |
 
@@ -60,7 +60,7 @@ python tool/generate_data.py
 | `lib/data/routine_data.dart` (`kRoutine`, `kDays`) | 667 class slots (theory and lab, CSE and EEE), Saturday to Thursday | CSE & EEE All Semesters, Fall 2026 Routine (.docx) | DONE |
 | `lib/data/exam_data.dart` (`kExam`) | CSE final exams, Day 1-8, semesters 1-11 | same .docx, exam table | DONE |
 | `lib/data/faculty_data.dart` (`kFaculty`) | 55 faculty, full name and short form | same .docx, faculty table | DONE |
-| `lib/data/misc_data.dart` | 48 prerequisite entries (`kPrereq`), 6 notices, 13 FAQs | **hand-written**; no source document exists | **PARTIAL**: `kPrereq` must be checked against the official curriculum |
+| `lib/data/misc_data.dart` | 38 prerequisite entries (`kPrereq`), 6 notices, 13 FAQs | `kPrereq` from the official course catalog (team photo, 27 Oct 2026); notices and FAQs are hand-written | DONE; two catalog entries not copied, see §2.4 |
 | `lib/data/demo_data.dart` | 12 dummy students (233000001-233000012) and their accounts | invented on purpose (Plan §9: no real student IDs or names) | DONE |
 
 Notes:
@@ -74,12 +74,12 @@ Notes:
 ## Phase 2: Frontend (DONE, see gaps in §2.4)
 
 Architecture (Plan §14):
-- Screens call providers (`lib/providers/`), and providers call `ApiService` (`lib/services/api_service.dart`, 40 methods).
+- Screens call providers (`lib/providers/`), and providers call `ApiService` (`lib/services/api_service.dart`, 40 methods; `enrollSelected`, `staffAdvise` and `createExtraRequest` take `acceptConflicts`).
 - The app currently uses `MockApiService`: in-memory data that enforces the plan's rules.
 
 Verification run on 26 Oct 2026:
 - `flutter analyze`: no issues.
-- `flutter test`: 33 tests pass.
+- `flutter test`: 48 tests pass (27 Oct 2026).
 - Release APK installed on an Android 17 emulator (x86_64). Checked by hand there: login, clearance, Select all, Confirm, routine, PDF share.
 
 ### 2.1 Student (Plan §7, student items 1-17)
@@ -138,18 +138,27 @@ Verification run on 26 Oct 2026:
 - **Notifications are in-app only.** Push notifications (FCM) are Phase 4.
 - **Profile photo** is a placeholder.
 
+**Team answers (27 Oct 2026)**:
+- **No credit limit.** (First set to 21, then removed by the team on 27 Oct 2026: the real limit depends on the faculty, so the app does not check it.) This changes Plan §5, which lists a credit limit step.
+- Room capacity: **theory 35, lab 28** (`AppConfig`). CSE 112 is seeded with 30 seats, so its seats cannot be set back to 30 once changed.
+- Group number: **6**; the group has no name.
+- Prerequisites come from the course catalog photo. **CSE 464 and CSE 466 have no prerequisite**: the photo names courses (CSE 445, CSE 227) that exist nowhere, and the team chose to skip them.
+- **Clashes only warn.** If courses clash in class time, or two final exams fall on the same day, the app shows a "Clash found" alert. The user can go back, or press "Take anyway" and keep the courses. The check runs on regular advising, staff advising and extra requests; approval of an extra request does not repeat it (the student already accepted). Prerequisites, clearance, windows, section lock and full seats still block.
+- Staff advising and extra-request approval **respect the windows** (§2.4).
+- PDF stays on the 9 screens.
+
 **Assumptions** (not in the plan or the documents; change them if the team knows better):
-- Credit limit **18** (`AppConfig.maxCredits`). The plan has a credit limit but no number.
-- Room capacity: **theory 45, lab 30** (`Catalog.roomCapacity`). The documents give no room sizes.
 - Seat usage is **simulated** (Plan §9). Semester 10 Section 1 is full on purpose, to show the waitlist.
 - Special consideration: the Administrator marks it (Plan §21 item 1, default).
 - Faculty cannot override prerequisites (Plan §21 item 2, default).
 
 **Deviations and behaviour the plan does not specify:**
 - Section groups are named **Section 1..n**, as in the real offer list, not A/B/C as in the plan's examples.
-- Faculty and Dean advising (`staffAdvise`) does **not** check the regular advising window. DECISION.
-- Approving an extra request does not check the window either. DECISION.
-- The Upload Deposit Form button opens the Accounts Clearance page until the real form link is known (`lib/utils/app_config.dart`, the one TODO in `lib/`).
+- Faculty and Dean advising (`staffAdvise`) checks the window: regular courses need the Regular window, other-semester (extra) courses need the Extra window. The Dean skips clearance, not the window.
+- Approving an extra request needs the Extra window open. Rejecting is always allowed.
+- Staff drops are not tied to a window.
+- The Upload Deposit Form button opens the real Bank Deposit Slip Upload form (`AppLinks.uploadDepositForm`).
+- The 50-request concurrency test now uses 35 seats, the largest legal room size, instead of the plan's 40.
 
 ### 2.5 Testing checklist (Plan §19)
 
@@ -158,13 +167,14 @@ Verification run on 26 Oct 2026:
 | Select all + Confirm, all or none | `advising_flow_test.dart`: "select all + confirm ...", "enrolment is all-or-nothing ..." | DONE (API level; the Select all button is exercised in the widget test) |
 | Section lock; a full drop clears it | "select all + confirm ...", "a full drop clears the section lock" | DONE |
 | No Drop button for students | code only (`my_classes_screen.dart`) | NOT TESTED |
-| Extra request rules | "extra request: one per course, withdraw while pending ..." | PARTIAL: no test for "reason required" or "status replaces the button" |
+| Extra request rules | "extra request: one per course, withdraw while pending ...", "approving an extra request needs the extra window ..." | PARTIAL: no test for "reason required" or "status replaces the button" |
 | Faculty own / Dean any / bypass logged | three tests in `advising_flow_test.dart` | DONE |
-| Not cleared blocks advising; Give/Revoke | "not cleared students cannot advise; admin Give ..." | PARTIAL: Revoke is not tested |
-| Closed window blocks actions | "closed windows block advising and extra requests" | DONE |
+| Not cleared blocks advising; Give/Revoke | "not cleared students cannot advise; admin Give ...", "Revoke makes a cleared student Not cleared ..." | DONE |
+| Clash alert (class time, exam day); accepting keeps the course; going back saves nothing; no credit limit | `advising_flow_test.dart` (4 clash tests, "there is no credit limit"), `widget_smoke_test.dart` (alert and "Take anyway" / "Go back" on the real screens), `advising_rules_test.dart` | DONE |
+| Closed window blocks actions | "closed windows block advising and extra requests", "staff advising respects the advising windows" | DONE |
 | Data matches the PDFs (11 semesters, exams Day 1-8) | `data_test.dart` checks structure | PARTIAL: no comparison with the PDFs; a person must spot-check |
 | PDF is one semester only | code only | NOT TESTED |
-| Concurrency: 50 requests, 40 seats, exactly 40 succeed; double tap safe | `concurrency_test.dart`, "a duplicate tap cannot enrol twice" | DONE for the **mock** only; must be repeated on Firestore in Phase 4 |
+| Concurrency: 50 requests, 40 seats, exactly 40 succeed; double tap safe | `concurrency_test.dart`, "a duplicate tap cannot enrol twice" | DONE for the **mock** only (35 seats); must be repeated on Firestore in Phase 4 |
 | Dark-mode inputs readable | `themeMode: light` plus explicit input colours | NOT TESTED |
 
 Known issues from the old demo (Plan §20), all avoided:
@@ -181,12 +191,12 @@ Known issues from the old demo (Plan §20), all avoided:
 | # | Task | Owner | Done when |
 |---|---|---|---|
 | 3.1 | Install `app-arm64-v8a-release.apk` on at least two real phones and run the demo flow for every role | TBD | No crash; screenshots saved |
-| 3.2 | Check `kPrereq` in `lib/data/misc_data.dart` against the official curriculum | TBD | Corrected list committed; `flutter test` passes |
+| 3.2 | ~~Check `kPrereq`~~ DONE 27 Oct 2026 from the catalog photo; CSE 464 and CSE 466 have none by decision | n/a | n/a |
 | 3.3 | Spot-check the routine, exam routine and offer list in the app against the source PDFs: at least semesters 4, 10 and 11 (Plan §19) | TBD | Mismatches fixed in `resources/` and regenerated |
-| 3.4 | Get the Bank Deposit Slip Upload form link and set `AppLinks.uploadDepositForm` | TBD | Button opens the real form |
-| 3.5 | DECISION: should staff advising and request approval respect the advising window? | Team | Answer recorded in §2.4 and the code updated |
-| 3.6 | DECISION: add PDF to the remaining list screens, or accept the 9 screens | Team | Recorded here |
-| 3.7 | Optional: add tests for Revoke, "reason required" and "no Drop button" | TBD | Tests pass |
+| 3.4 | ~~Bank Deposit Slip form link~~ DONE 27 Oct 2026 | n/a | n/a |
+| 3.5 | ~~DECISION: staff advising and approval respect the windows~~ DONE: yes, implemented and tested | n/a | n/a |
+| 3.6 | ~~DECISION: PDF screens~~ DONE: keep the 9 screens | n/a | n/a |
+| 3.7 | Optional: add tests for "reason required" and "no Drop button" (Revoke is done) | TBD | Tests pass |
 | 3.8 | Take screenshots of every screen for the report (Plan §17 step 12) | TBD | Folder of screenshots |
 | 3.9 | Recommended (not in the plan): put the project on GitHub so all four members share one copy. The folder is not a git repository yet | TBD | Repository created; everyone can pull |
 
@@ -215,7 +225,7 @@ Work in the plan's order:
 | 4.2 | Auth and roles: `users` collection with `role` and `isDean` | `login` | §10.1, §15 | Real passwords; wrong role is rejected |
 | 4.3 | Seed Firestore from `kOffer`, `kRoutine`, `kExam`, `kFaculty`, `kPrereq` and the demo students | n/a | §10.2-10.5, §10.13-10.14 | Collections match the Dart data |
 | 4.4 | Students, clearance, transcript, finance | `fetchStudent(s)`, `updateContact`, `fetchTranscript`, `fetchFinance`, `setClearance` | §3, §10.2, §10.8-10.9 | Clearance rules as in Plan §3 |
-| 4.5 | **Advising core**: one transaction; validation order clearance, window, lock, prerequisite, credit, clash, seat; enrollment ID `{studentId}_{sectionId}` | `fetchSections`, `fetchEnrollments`, `enrollSelected` | §5, §6, §10.5-10.6 | **Concurrency test on Firestore: 50 requests, 40 seats, exactly 40** |
+| 4.5 | **Advising core**: one transaction; validation order clearance, window, lock, prerequisite, seat; then class-time and exam-day clashes, which throw `ConflictException` unless `acceptConflicts` is true; no credit limit; enrollment ID `{studentId}_{sectionId}` | `fetchSections`, `fetchEnrollments`, `enrollSelected` | §5, §6, §10.5-10.6 | **Concurrency test on Firestore: 50 requests, 35 seats (largest legal room), exactly 35** |
 | 4.6 | Waitlist ordered by server timestamp; promotion inside the drop transaction | `fetchWaitlist`, `fetchSectionWaitlist`, `joinWaitlist`, `leaveWaitlist` | §6, §10.7 | First in line is enrolled when a seat frees |
 | 4.7 | Faculty and Dean tools; Dean bypass written to the audit log | `staffAdvise`, `staffDrop`, `changeSeats`, `fetchSectionEnrollments` | §2, §11 | Permission matrix (Plan §15) holds |
 | 4.8 | Extra-course requests, one per course (doc ID `{studentId}_{courseCode}_{kind}`) | `createExtraRequest`, `withdrawExtraRequest`, `decideExtraRequest`, `fetchMyRequests`, `fetchRequestsFor` | §4, §10.11 | Withdraw only while Pending |
@@ -247,14 +257,10 @@ From Plan §17 Phase C and the course outline (Plan §1):
 
 ## Open decisions (do not guess: ask the team)
 
-1. Credit limit: is 18 correct?
-2. Room capacities for the seat-change limit (now assumed: theory 45, lab 30).
-3. Should faculty and Dean advising, and request approval, respect the advising window? (§2.4)
-4. PDF on every list screen, or the current 9? (§2.4)
-5. Real faculty emails, phones and positions (Plan §21 item 3).
-6. Bank Deposit Slip Upload form link (Plan §21 item 4).
-7. Group name (Plan §21 item 6).
-8. Who owns which Phase 3, 4 and 5 task: the plan names only Anamur, as frontend lead.
+Answered on 27 Oct 2026: no credit limit, CSE 464/466 without prerequisite, clashes only warn, room capacities 35 and 28, staff advising and approval respect the windows, PDF on 9 screens, deposit form link, group number 6 (no name).
+
+1. Real faculty emails, phones and positions (Plan §21 item 3).
+2. Who owns which Phase 3, 4 and 5 task: the plan names only Anamur, as frontend lead.
 
 ## Rules for AI assistants on this repository
 

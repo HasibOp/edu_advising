@@ -98,7 +98,7 @@ class _RegularTab extends StatelessWidget {
                         child: Text('Enrolled: ${a.regular.length} course(s)',
                             style: const TextStyle(fontWeight: FontWeight.w700)),
                       ),
-                      Text('${Formatters.credits(a.credits)} / ${Formatters.credits(AppConfig.maxCredits)} cr',
+                      Text('${Formatters.credits(a.credits)} cr',
                           style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
                     ],
                   ),

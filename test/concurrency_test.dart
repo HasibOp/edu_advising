@@ -4,10 +4,12 @@ import 'package:edu_advising/models/course.dart';
 import 'package:edu_advising/services/mock_api_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Plan section 6: 50 simultaneous requests at a 40-seat section must give
-/// exactly 40 enrolments. The Firestore transaction must pass the same test.
+/// Plan section 6: 50 simultaneous requests at a full-size section must give
+/// exactly as many enrolments as seats. The plan used 40 seats; theory rooms
+/// hold 35 (AppConfig), so the largest legal section is used. The Firestore
+/// transaction must pass the same test.
 void main() {
-  test('50 parallel enrol requests on a 40-seat section -> exactly 40 succeed', () async {
+  test('50 parallel enrol requests on a 35-seat section -> exactly 35 succeed', () async {
     final api = MockApiService(
       latency: const Duration(milliseconds: 5),
       simulateSeats: false,
@@ -26,8 +28,9 @@ void main() {
     }
     const dean = AppUser(
         id: 'Dr. MK', role: UserRole.instructor, name: 'Dean', isDean: true, shortName: 'Dr. MK');
+    const seats = 35;
     final sectionId = CourseSection.makeId('CSE 111', 1, 1);
-    await api.changeSeats(dean, sectionId, 40);
+    await api.changeSeats(dean, sectionId, seats);
 
     final results = await Future.wait([
       for (var i = 0; i < 50; i++)
@@ -37,10 +40,10 @@ void main() {
             .catchError((_) => false),
     ]);
 
-    expect(results.where((ok) => ok).length, 40);
+    expect(results.where((ok) => ok).length, seats);
     final section = (await api.fetchSections(semesterNo: 1)).firstWhere((s) => s.id == sectionId);
-    expect(section.enrolled, 40);
+    expect(section.enrolled, seats);
     expect(section.isFull, isTrue);
-    expect((await api.fetchSectionEnrollments(sectionId)).length, 40);
+    expect((await api.fetchSectionEnrollments(sectionId)).length, seats);
   });
 }

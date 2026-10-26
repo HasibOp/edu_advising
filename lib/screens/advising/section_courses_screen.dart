@@ -5,7 +5,6 @@ import '../../models/course.dart';
 import '../../providers/advising_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../services/catalog.dart';
-import '../../utils/app_config.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/badges.dart';
@@ -42,8 +41,10 @@ class _SectionCoursesScreenState extends State<SectionCoursesScreen> {
     );
     if (!ok || !mounted) return;
     try {
-      final result = await a.confirmSelection();
-      if (!mounted) return;
+      final result = await runAllowingConflicts(
+          context, (accept) => a.confirmSelection(acceptConflicts: accept));
+      // null: the student went back after seeing a clash. Nothing was saved.
+      if (result == null || !mounted) return;
       context.read<NotificationProvider>().refresh();
       await showDialog<void>(
         context: context,
@@ -170,8 +171,7 @@ class _SectionCoursesScreenState extends State<SectionCoursesScreen> {
                               style: const TextStyle(fontWeight: FontWeight.w700)),
                           Text(
                             '${Formatters.credits(a.selectedCredits)} cr  (total '
-                            '${Formatters.credits(a.credits + a.selectedCredits)} / '
-                            '${Formatters.credits(AppConfig.maxCredits)})',
+                            '${Formatters.credits(a.credits + a.selectedCredits)})',
                             style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
                           ),
                         ],
