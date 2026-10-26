@@ -193,9 +193,12 @@ class _GroupCard extends StatelessWidget {
                   style: const TextStyle(fontSize: 12.5, color: AppColors.textMuted),
                 ),
                 const SizedBox(height: 6),
-                Row(
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 2,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    const Text('Seats ', style: TextStyle(fontSize: 12.5)),
+                    const Text('Seats', style: TextStyle(fontSize: 12.5)),
                     SeatBadge(bottleneck),
                   ],
                 ),

@@ -31,11 +31,12 @@ class ClearanceResultCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
             children: [
               Icon(clearanceIcon(status), color: color, size: 30),
-              const SizedBox(width: 8),
               Text(status.label,
                   style: TextStyle(color: color, fontSize: 19, fontWeight: FontWeight.w700)),
             ],

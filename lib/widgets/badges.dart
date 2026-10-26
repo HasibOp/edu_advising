@@ -31,13 +31,17 @@ class StatusPill extends StatelessWidget {
             Icon(icon, size: 13, color: solid ? Colors.white : color),
             const SizedBox(width: 4),
           ],
-          Text(
-            label,
-            style: TextStyle(
-              color: solid ? Colors.white : color,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.2,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: solid ? Colors.white : color,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+              ),
             ),
           ),
         ],
@@ -87,16 +91,18 @@ class SeatBadge extends StatelessWidget {
       SeatLevel.low => ('${section.seatsLeft} LEFT', AppColors.warning),
       SeatLevel.open => ('OPEN', AppColors.success),
     };
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    // Wrap, not Row: on a narrow phone or with a large font the pill drops to
+    // the next line instead of overflowing.
+    return Wrap(
+      spacing: 6,
+      runSpacing: 2,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        if (showCount) ...[
+        if (showCount)
           Text(
             '${section.enrolled}/${section.capacity}',
             style: const TextStyle(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.w600),
           ),
-          const SizedBox(width: 6),
-        ],
         StatusPill(label, color: color),
       ],
     );

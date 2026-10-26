@@ -313,4 +313,38 @@ void main() {
       throwsA(predicate((e) => e is ApiException && e is! ConflictException)),
     );
   });
+
+  test('a clash on the waitlist warns once; a freed seat still enrols the student', () async {
+    // A full Semester 10 Section 1 course that clashes with an extra course.
+    final full = (await group(10, 1)).where((s) => s.isFull).toList();
+    final others = (await api.fetchSections()).where((s) => s.semesterNo != 10 && !s.isFull);
+    CourseSection? fullPick;
+    CourseSection? extraPick;
+    for (final f in full) {
+      for (final x in others) {
+        final clash = AdvisingRules.clashError(
+          {f.label: Catalog.instance.slotsFor(f.courseCode, f.parts.first.sectionNo)},
+          {x.label: Catalog.instance.slotsFor(x.courseCode, x.parts.first.sectionNo)},
+        );
+        if (clash != null && f.courseCode != 'CSE 443') {
+          fullPick = f;
+          extraPick = x;
+          break;
+        }
+      }
+      if (fullPick != null) break;
+    }
+    if (fullPick == null) fail('the demo data has no full course that clashes with an extra course');
+    await api.staffAdvise(dean, '233000001', [extraPick!.id], acceptConflicts: true);
+    await expectLater(
+        api.joinWaitlist('233000001', fullPick.id), throwsA(isA<ConflictException>()));
+    expect(await api.fetchWaitlist('233000001'), isEmpty);
+    await api.joinWaitlist('233000001', fullPick.id, acceptConflicts: true);
+
+    // A seat frees up: the student is enrolled in spite of the clash.
+    await api.changeSeats(dean, fullPick.id, fullPick.capacity + 1);
+    final mine = await api.fetchEnrollments('233000001');
+    expect(mine.map((e) => e.courseCode), contains(fullPick.courseCode));
+    expect(await api.fetchWaitlist('233000001'), isEmpty);
+  });
 }

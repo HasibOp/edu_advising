@@ -187,8 +187,8 @@ class AdvisingProvider extends ChangeNotifier {
     return result;
   }
 
-  Future<WaitlistEntry> joinWaitlist(String sectionId) =>
-      _busy(() => _api.joinWaitlist(_studentId!, sectionId));
+  Future<WaitlistEntry> joinWaitlist(String sectionId, {bool acceptConflicts = false}) =>
+      _busy(() => _api.joinWaitlist(_studentId!, sectionId, acceptConflicts: acceptConflicts));
 
   Future<void> leaveWaitlist(String entryId) => _busy(() => _api.leaveWaitlist(entryId));
 

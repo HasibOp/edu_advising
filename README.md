@@ -14,8 +14,8 @@ to Firebase in the backend phase.
 flutter pub get
 flutter run                 # phone over USB, or an emulator
 flutter run -d chrome       # quick check in the browser
-flutter test                # 33 tests: rules, data, concurrency, every screen
-flutter build apk --release # installable APK in build/app/outputs/flutter-apk/
+flutter test                # 66 tests: rules, data, concurrency, every screen, phone-size layout
+flutter build apk --release # one APK for every Android 7.0+ phone (see PROJECT_ROADMAP.md section 1)
 ```
 
 ## Demo accounts (any password)
@@ -107,9 +107,11 @@ Screens only talk to providers, and providers only talk to `ApiService`
    transactions / Cloud Functions). Every model has `toJson`/`fromJson`.
 2. Seed Firestore from `kOffer`, `kRoutine`, `kExam`, `kFaculty`, `kPrereq`.
 3. In `main.dart`, replace `MockApiService()` with the Firebase service.
-4. Throw `ApiException('message')` for errors the user should see.
-5. Fill in `AppLinks.uploadDepositForm` in `lib/utils/app_config.dart` with the
-   real Bank Deposit Slip form link.
+4. Throw `ApiException('message')` for errors the user should see, and
+   `ConflictException(list)` for class-time or exam-day clashes (the screens
+   show an alert and repeat the call with `acceptConflicts: true`).
+5. The tests in `test/advising_flow_test.dart` and `test/concurrency_test.dart`
+   are the acceptance tests for the new service.
 
 ## Notes
 

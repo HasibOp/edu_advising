@@ -5,6 +5,7 @@ import 'package:edu_advising/models/student.dart';
 import 'package:edu_advising/services/advising_rules.dart';
 import 'package:edu_advising/services/catalog.dart';
 import 'package:edu_advising/utils/faq_matcher.dart';
+import 'package:edu_advising/widgets/routine_views.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 ClassSlot slot(String day, String time) {
@@ -133,5 +134,21 @@ void main() {
     expect(FaqMatcher.bestMatch(faqs, 'my section is full')!.id, '1');
     expect(FaqMatcher.bestMatch(faqs, 'how can I pay?')!.id, '2');
     expect(FaqMatcher.bestMatch(faqs, 'what is the cafeteria menu'), isNull);
+  });
+
+  test('overlapping classes share a day column; others keep the full width', () {
+    final a = slot('Sunday', '9.30-11.30');
+    final b = slot('Sunday', '10.00-12.00'); // overlaps a
+    final c = slot('Sunday', '1.00-2.00'); // alone
+    final d = slot('Monday', '9.30-11.30'); // other day
+    final lanes = layoutRoutineLanes([a, b, c, d]);
+    expect(lanes[a], (0, 2));
+    expect(lanes[b], (1, 2));
+    expect(lanes[c], (0, 1));
+    expect(lanes[d], (0, 1));
+    // A third class after the first one ends reuses its lane.
+    final e = slot('Sunday', '11.30-1.00');
+    final more = layoutRoutineLanes([a, b, e]);
+    expect(more[e]!.$2, 2);
   });
 }

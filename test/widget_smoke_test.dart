@@ -269,4 +269,21 @@ void main() {
     expect(find.text('Clash found'), findsNothing);
     expect(await tester.runAsync(() => api.fetchMyRequests('233000001')), isEmpty);
   });
+
+  testWidgets('class routine by section lists every part of a split lab', (tester) async {
+    await start(tester);
+    await login(tester, 'Student', '233000001');
+    await tester.tap(find.text('Menu').last);
+    await tester.pumpAndSettle();
+    await openMenu(tester, 'Class routine');
+    await tester.tap(find.text('By section'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Semester 2'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Day list'));
+    await tester.pumpAndSettle();
+    // Semester 2 Section 1 holds PHY 102.1 and PHY 102.11 (two lab rooms).
+    expect(find.textContaining('PHY 102.1  '), findsWidgets);
+    expect(find.textContaining('PHY 102.11'), findsWidgets);
+  });
 }

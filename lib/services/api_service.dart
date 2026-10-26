@@ -72,7 +72,8 @@ abstract class ApiService {
   // Waitlist
   Future<List<WaitlistEntry>> fetchWaitlist(String studentId);
   Future<List<WaitlistEntry>> fetchSectionWaitlist(String sectionId);
-  Future<WaitlistEntry> joinWaitlist(String studentId, String sectionId);
+  Future<WaitlistEntry> joinWaitlist(String studentId, String sectionId,
+      {bool acceptConflicts = false});
   Future<void> leaveWaitlist(String entryId);
 
   // Extra course requests

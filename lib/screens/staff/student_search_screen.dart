@@ -44,12 +44,14 @@ class _StudentSearchScreenState extends State<StudentSearchScreen> {
     });
     try {
       final s = await context.read<ApiService>().fetchStudent(value);
-      setState(() => _student = s);
+      if (mounted) setState(() => _student = s);
     } catch (e) {
-      setState(() {
-        _student = null;
-        _error = errorText(e);
-      });
+      if (mounted) {
+        setState(() {
+          _student = null;
+          _error = errorText(e);
+        });
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

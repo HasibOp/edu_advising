@@ -188,7 +188,14 @@ const List<(String, String, String, List<String>)> kFaq = [
         'cancel, or accept the warning and take the courses anyway. It is '
         'your decision.',
     'Advising',
-    ['clash', 'conflict', 'same time', 'overlap', 'exam day', 'credit', 'credits', 'limit'],
+    ['clash', 'conflict', 'same time', 'overlap', 'exam day'],
+  ),
+  (
+    'Is there a credit limit?',
+    'The app does not stop you at a credit limit. How many credits you can '
+        'take may depend on your faculty, so check with them.',
+    'Advising',
+    ['credit', 'credits', 'limit', 'maximum', 'how many'],
   ),
   (
     'What is a prerequisite?',

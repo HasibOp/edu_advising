@@ -540,7 +540,10 @@ class MockApiService implements ApiService {
       _waitlist.remove(w);
       final student = _base(w.studentId);
       try {
-        _validateAndCommit(student, [section], by: 'waitlist', checkLock: true);
+        // The student chose this course when joining the waitlist (and saw any
+        // clash warning then), so a clash must not cost them the seat.
+        _validateAndCommit(student, [section],
+            by: 'waitlist', checkLock: true, acceptConflicts: true);
         _log(_staffUser(student.id), AuditAction.waitlistPromote, student.id,
             'Promoted from waitlist into ${section.label}');
         _notify(student.id, 'You got a seat!',
@@ -808,7 +811,8 @@ class MockApiService implements ApiService {
   }
 
   @override
-  Future<WaitlistEntry> joinWaitlist(String studentId, String sectionId) async {
+  Future<WaitlistEntry> joinWaitlist(String studentId, String sectionId,
+      {bool acceptConflicts = false}) async {
     await _delay();
     final student = _base(studentId);
     final s = _section(sectionId);
@@ -829,6 +833,10 @@ class MockApiService implements ApiService {
     }
     if (_waitlist.any((w) => w.studentId == studentId && w.sectionId == sectionId)) {
       throw ApiException('You are already on the waitlist for ${s.label}.');
+    }
+    if (!acceptConflicts) {
+      final conflicts = _conflictsOf(_active(studentId), [s]);
+      if (conflicts.isNotEmpty) throw ConflictException(conflicts);
     }
     final item = _WaitItem(_nextId('W'), studentId, sectionId, _now);
     _waitlist.add(item);

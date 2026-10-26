@@ -148,13 +148,21 @@ class _AuditLogViewState extends State<AuditLogView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            StatusPill(l.action.code, color: _color(l)),
-                            if (l.bypassedClearance) ...[
-                              const SizedBox(width: 6),
-                              const StatusPill('BYPASS', color: AppColors.warning, solid: true),
-                            ],
-                            const Spacer(),
+                            Expanded(
+                              child: Wrap(
+                                spacing: 6,
+                                runSpacing: 4,
+                                children: [
+                                  StatusPill(l.action.code, color: _color(l)),
+                                  if (l.bypassedClearance)
+                                    const StatusPill('BYPASS',
+                                        color: AppColors.warning, solid: true),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
                             Text(Formatters.timeAgo(l.timestamp),
                                 style: const TextStyle(fontSize: 11.5, color: AppColors.textMuted)),
                           ],
