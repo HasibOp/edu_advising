@@ -55,8 +55,10 @@ class _ClassRoutineScreenState extends State<ClassRoutineScreen> {
   List<ClassSlot> _slots(BuildContext context) {
     final catalog = Catalog.instance;
     if (_mode == _Mode.section) {
+      // Every part of a split lab (CSE 114.1 and CSE 114.11) belongs to the section.
       return [
-        for (final s in _groupSections) ...catalog.slotsFor(s.courseCode, s.sectionNo),
+        for (final s in _groupSections)
+          for (final p in s.parts) ...catalog.slotsFor(s.courseCode, p.sectionNo),
       ];
     }
     final user = context.read<AuthProvider>().user!;
@@ -102,7 +104,9 @@ class _ClassRoutineScreenState extends State<ClassRoutineScreen> {
     final catalog = Catalog.instance;
     final slots = _slots(context);
     final noTime = _mode == _Mode.section
-        ? _groupSections.where((s) => catalog.slotsFor(s.courseCode, s.sectionNo).isEmpty).toList()
+        ? _groupSections
+            .where((s) => s.parts.every((p) => catalog.slotsFor(s.courseCode, p.sectionNo).isEmpty))
+            .toList()
         : const <CourseSection>[];
 
     return Scaffold(
@@ -188,7 +192,7 @@ class _ClassRoutineScreenState extends State<ClassRoutineScreen> {
           if (noTime.isNotEmpty) ...[
             const SizedBox(height: 10),
             Text(
-              'No fixed class time: ${noTime.map((s) => s.label).join(', ')} (project course)',
+              'No class time published: ${noTime.map((s) => s.label).join(', ')}',
               style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
             ),
           ],

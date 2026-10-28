@@ -91,11 +91,20 @@ class _StaffAdviseScreenState extends State<StaffAdviseScreen> {
     );
     if (!ok || !mounted) return;
     setState(() => _busy = true);
-    final done = await runWithFeedback(
-      context,
-      () => _api.staffAdvise(user, _student!.id, picked.map((s) => s.id).toList()),
-      success: 'Added ${picked.map((s) => s.label).join(', ')}',
-    );
+    var done = false;
+    try {
+      final added = await runAllowingConflicts(
+        context,
+        (accept) => _api.staffAdvise(user, _student!.id, picked.map((s) => s.id).toList(),
+            acceptConflicts: accept),
+      );
+      done = added != null;
+      if (done && mounted) {
+        showAppSnackBar(context, 'Added ${picked.map((s) => s.label).join(', ')}');
+      }
+    } catch (e) {
+      if (mounted) showAppSnackBar(context, errorText(e), isError: true);
+    }
     if (done) _selected.clear();
     await _load();
     if (mounted) {

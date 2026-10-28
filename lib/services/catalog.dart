@@ -5,6 +5,7 @@ import '../data/offer_data.dart';
 import '../data/routine_data.dart';
 import '../models/class_slot.dart';
 import '../models/course.dart';
+import '../utils/app_config.dart';
 
 class Faculty {
   const Faculty({required this.name, required this.shortForm});
@@ -142,12 +143,20 @@ class Catalog {
   /// Exam routine of one semester: (day 1-8, course code).
   List<(int, String)> examsOf(int semesterNo) => kExam[semesterNo] ?? const [];
 
-  /// Seats a room can hold. The documents have no room sizes, so theory
-  /// rooms are assumed to hold 45 and labs 30.
+  /// Exam day (1-8) of a course in its semester's exam routine, or null
+  /// when it has no exam (project courses).
+  int? examDay(String courseCode, int semesterNo) {
+    for (final (day, code) in examsOf(semesterNo)) {
+      if (code == courseCode) return day;
+    }
+    return null;
+  }
+
+  /// Seats a room can hold: theory rooms 35, labs 28 (AppConfig).
   int roomCapacity(String courseCode, int sectionNo) {
     final slots = slotsFor(courseCode, sectionNo);
-    if (slots.isEmpty) return 45;
-    return slots.any((s) => !s.isLab) ? 45 : 30;
+    if (slots.isEmpty) return AppConfig.theoryRoomCapacity;
+    return slots.any((s) => !s.isLab) ? AppConfig.theoryRoomCapacity : AppConfig.labRoomCapacity;
   }
 
   /// Seat structure of the offer list, used to seed the mock backend.

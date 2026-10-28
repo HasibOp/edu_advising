@@ -27,6 +27,7 @@ class WeekRoutineGrid extends StatelessWidget {
       if (s.endMinute > end) end = (s.endMinute + 29) ~/ 30 * 30;
     }
     final height = (end - start) * _perMinute;
+    final lanes = layoutRoutineLanes(slots);
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -80,11 +81,14 @@ class WeekRoutineGrid extends StatelessWidget {
             for (final s in slots)
               if (days.contains(s.day))
                 Positioned(
-                  left: _axisWidth + days.indexOf(s.day) * _dayWidth + 2,
+                  left: _axisWidth +
+                      days.indexOf(s.day) * _dayWidth +
+                      2 +
+                      lanes[s]!.$1 * (_dayWidth - 4) / lanes[s]!.$2,
                   top: _headerHeight + (s.startMinute - start) * _perMinute,
-                  width: _dayWidth - 4,
+                  width: (_dayWidth - 4) / lanes[s]!.$2 - (lanes[s]!.$2 > 1 ? 1 : 0),
                   height: (s.endMinute - s.startMinute) * _perMinute - 2,
-                  child: _Block(slot: s),
+                  child: _Block(slot: s, compact: lanes[s]!.$2 > 1),
                 ),
           ],
         ),
@@ -93,10 +97,57 @@ class WeekRoutineGrid extends StatelessWidget {
   }
 }
 
+/// Classes that overlap on the same day (two lab rooms at the same time)
+/// share the day column side by side instead of hiding each other.
+/// Returns, for each slot, (lane, number of lanes in its group).
+@visibleForTesting
+Map<ClassSlot, (int, int)> layoutRoutineLanes(List<ClassSlot> slots) {
+  final result = <ClassSlot, (int, int)>{};
+  final byDay = <String, List<ClassSlot>>{};
+  for (final s in slots) {
+    byDay.putIfAbsent(s.day, () => []).add(s);
+  }
+  for (final list in byDay.values) {
+    list.sort((a, b) => a.startMinute.compareTo(b.startMinute));
+    var group = <ClassSlot>[];
+    var groupEnd = -1;
+    void flush() {
+      if (group.isEmpty) return;
+      final laneEnds = <int>[];
+      final laneOf = <ClassSlot, int>{};
+      for (final s in group) {
+        var lane = laneEnds.indexWhere((end) => end <= s.startMinute);
+        if (lane < 0) {
+          lane = laneEnds.length;
+          laneEnds.add(s.endMinute);
+        } else {
+          laneEnds[lane] = s.endMinute;
+        }
+        laneOf[s] = lane;
+      }
+      for (final s in group) {
+        result[s] = (laneOf[s]!, laneEnds.length);
+      }
+      group = <ClassSlot>[];
+    }
+
+    for (final s in list) {
+      if (group.isNotEmpty && s.startMinute >= groupEnd) flush();
+      group.add(s);
+      groupEnd = group.length == 1 ? s.endMinute : (s.endMinute > groupEnd ? s.endMinute : groupEnd);
+    }
+    flush();
+  }
+  return result;
+}
+
 class _Block extends StatelessWidget {
-  const _Block({required this.slot});
+  const _Block({required this.slot, this.compact = false});
 
   final ClassSlot slot;
+
+  /// Narrow block (shared column): shows the label only.
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -117,18 +168,21 @@ class _Block extends StatelessWidget {
             Text(slot.label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w700, fontSize: 11.5, color: AppColors.text)),
+                style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: compact ? 9.5 : 11.5,
+                    color: AppColors.text)),
             Text(
-              '${slot.isLab ? 'Lab' : 'Theory'} - ${slot.room}',
+              compact ? slot.room : '${slot.isLab ? 'Lab' : 'Theory'} - ${slot.room}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 10, color: AppColors.text),
+              style: TextStyle(fontSize: compact ? 9 : 10, color: AppColors.text),
             ),
-            Text(slot.faculty,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
+            if (!compact)
+              Text(slot.faculty,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
           ],
         ),
       ),

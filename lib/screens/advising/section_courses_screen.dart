@@ -5,7 +5,6 @@ import '../../models/course.dart';
 import '../../providers/advising_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../services/catalog.dart';
-import '../../utils/app_config.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/badges.dart';
@@ -42,8 +41,10 @@ class _SectionCoursesScreenState extends State<SectionCoursesScreen> {
     );
     if (!ok || !mounted) return;
     try {
-      final result = await a.confirmSelection();
-      if (!mounted) return;
+      final result = await runAllowingConflicts(
+          context, (accept) => a.confirmSelection(acceptConflicts: accept));
+      // null: the student went back after seeing a clash. Nothing was saved.
+      if (result == null || !mounted) return;
       context.read<NotificationProvider>().refresh();
       await showDialog<void>(
         context: context,
@@ -124,20 +125,26 @@ class _SectionCoursesScreenState extends State<SectionCoursesScreen> {
                 message: 'The regular advising window is closed.',
               ),
             if (viewOnly || !a.canAdvise) const SizedBox(height: 12),
-            Row(
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              runSpacing: 4,
               children: [
-                Expanded(
-                  child: Text(
-                    '${group.sections.length} courses  |  ${Formatters.credits(group.totalCredits)} credits',
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-                  ),
+                Text(
+                  '${group.sections.length} courses  |  ${Formatters.credits(group.totalCredits)} credits',
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
                 ),
-                if (selectedHere > 0)
-                  TextButton(onPressed: a.clearSelection, child: const Text('Clear')),
-                OutlinedButton.icon(
-                  onPressed: selectable == 0 ? null : () => a.selectAll(group),
-                  icon: const Icon(Icons.done_all, size: 18),
-                  label: const Text('Select all'),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    if (selectedHere > 0)
+                      TextButton(onPressed: a.clearSelection, child: const Text('Clear')),
+                    OutlinedButton.icon(
+                      onPressed: selectable == 0 ? null : () => a.selectAll(group),
+                      icon: const Icon(Icons.done_all, size: 18),
+                      label: const Text('Select all'),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -170,8 +177,7 @@ class _SectionCoursesScreenState extends State<SectionCoursesScreen> {
                               style: const TextStyle(fontWeight: FontWeight.w700)),
                           Text(
                             '${Formatters.credits(a.selectedCredits)} cr  (total '
-                            '${Formatters.credits(a.credits + a.selectedCredits)} / '
-                            '${Formatters.credits(AppConfig.maxCredits)})',
+                            '${Formatters.credits(a.credits + a.selectedCredits)})',
                             style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
                           ),
                         ],
@@ -205,6 +211,19 @@ class _CourseTile extends StatelessWidget {
   final CourseSection section;
   final bool viewOnly;
 
+  /// A clash is an alert, not a block: the student may still join.
+  Future<void> _joinWaitlist(BuildContext context, AdvisingProvider a) async {
+    try {
+      final entry = await runAllowingConflicts(
+          context, (accept) => a.joinWaitlist(section.id, acceptConflicts: accept));
+      if (entry != null && context.mounted) {
+        showAppSnackBar(context, 'Added to the waitlist for ${section.label}');
+      }
+    } catch (e) {
+      if (context.mounted) showAppSnackBar(context, errorText(e), isError: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final a = context.watch<AdvisingProvider>();
@@ -214,7 +233,9 @@ class _CourseTile extends StatelessWidget {
     final waiting = a.waitlistFor(s.id);
     final missing = a.missingPrerequisites(s.courseCode);
     final selected = a.isSelected(s.id);
-    final slots = Catalog.instance.slotsFor(s.courseCode, s.sectionNo);
+    // A split lab puts the student in the first part that still has a seat.
+    final part = s.nextPart ?? s.parts.first;
+    final slots = Catalog.instance.slotsFor(s.courseCode, part.sectionNo);
 
     return AppCard(
       padding: const EdgeInsets.fromLTRB(6, 10, 14, 12),
@@ -252,11 +273,11 @@ class _CourseTile extends StatelessWidget {
                 ),
                 Text(s.title, style: const TextStyle(fontWeight: FontWeight.w500)),
                 if (s.parts.length > 1)
-                  Text('Lab split: ${s.fullLabel}',
+                  Text('Lab split: ${s.fullLabel}. You get ${Formatters.sectionLabel(s.courseCode, part.sectionNo)}.',
                       style: const TextStyle(fontSize: 11.5, color: AppColors.textMuted)),
                 const SizedBox(height: 4),
                 if (slots.isEmpty)
-                  const Text('Time: TBA (project course)',
+                  const Text('Time: TBA',
                       style: TextStyle(fontSize: 12, color: AppColors.textMuted))
                 else
                   for (final slot in slots)
@@ -294,10 +315,7 @@ class _CourseTile extends StatelessWidget {
                   )
                 else if (s.isFull && !viewOnly && a.canAdvise)
                   OutlinedButton.icon(
-                    onPressed: a.isBusy
-                        ? null
-                        : () => runWithFeedback(context, () => a.joinWaitlist(s.id),
-                            success: 'Added to the waitlist for ${s.label}'),
+                    onPressed: a.isBusy ? null : () => _joinWaitlist(context, a),
                     icon: const Icon(Icons.playlist_add, size: 18),
                     label: const Text('Join waitlist'),
                     style: OutlinedButton.styleFrom(foregroundColor: AppColors.warning),

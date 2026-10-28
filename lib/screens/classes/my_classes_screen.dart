@@ -159,14 +159,24 @@ class _ClassCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(e.label,
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primary)),
+              Expanded(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(e.label,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                    StatusPill(e.type.label.toUpperCase(),
+                        color:
+                            e.type == EnrollmentType.regular ? AppColors.success : AppColors.info),
+                  ],
+                ),
+              ),
               const SizedBox(width: 8),
-              StatusPill(e.type.label.toUpperCase(),
-                  color: e.type == EnrollmentType.regular ? AppColors.success : AppColors.info),
-              const Spacer(),
               Text('${Formatters.credits(e.credits)} cr',
                   style: const TextStyle(fontWeight: FontWeight.w600)),
             ],

@@ -28,6 +28,13 @@ class WindowsScreen extends StatelessWidget {
     final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(current));
     if (!context.mounted) return;
     final value = DateTime(date.year, date.month, date.day, time?.hour ?? 0, time?.minute ?? 0);
+    final other = opens ? w.closesAt : w.opensAt;
+    if (other != null && (opens ? value.isAfter(other) : value.isBefore(other))) {
+      showAppSnackBar(
+          context, opens ? 'Opening must be before closing.' : 'Closing must be after opening.',
+          isError: true);
+      return;
+    }
     await _update(
       context,
       opens ? w.copyWith(opensAt: value) : w.copyWith(closesAt: value),

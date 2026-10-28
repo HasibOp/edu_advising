@@ -188,6 +188,67 @@ Future<bool> runWithFeedback(
   }
 }
 
+/// Warns about class-time or exam-day clashes. Resolves to true only when the
+/// user chooses to take the courses anyway.
+Future<bool> conflictDialog(BuildContext context, List<String> conflicts) async {
+  final result = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      icon: const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 44),
+      title: const Text('Clash found'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final c in conflicts)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.circle, size: 7, color: AppColors.warning),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(c)),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 4),
+            const Text('You can still take these courses if you accept the clash. '
+                'It is your decision.',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Go back')),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: AppColors.warning),
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Take anyway'),
+        ),
+      ],
+    ),
+  );
+  return result ?? false;
+}
+
+/// Runs [action]. If it throws a [ConflictException], shows the clashes and,
+/// when the user accepts, runs it again with `acceptConflicts: true`.
+/// Returns null when the user goes back instead.
+Future<T?> runAllowingConflicts<T>(
+  BuildContext context,
+  Future<T> Function(bool acceptConflicts) action,
+) async {
+  try {
+    return await action(false);
+  } on ConflictException catch (e) {
+    if (!context.mounted) return null;
+    if (!await conflictDialog(context, e.conflicts)) return null;
+    return action(true);
+  }
+}
+
 /// Yes/no dialog. Resolves to true only when the user confirms.
 Future<bool> confirmDialog(
   BuildContext context, {

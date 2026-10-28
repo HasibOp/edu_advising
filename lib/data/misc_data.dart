@@ -1,67 +1,56 @@
 // Hand-written reference data. The university documents do not include
-// prerequisites, notices or FAQ answers, so these are sensible defaults for
-// the demo: please check kPrereq against the official curriculum.
+// notices or FAQ answers, so those are sensible defaults for the demo.
+// kPrereq is transcribed from the official course catalog (166 credits).
 
-/// Course -> courses that must be passed first.
+/// Course -> courses that must be passed first, from the course catalog.
+/// Courses with no prerequisite (and labs printed with a blank cell) are
+/// left out.
+///
+/// CSE 464 and CSE 466 have no prerequisite on purpose: the catalog names
+/// courses for them (CSE 445, CSE 227) that exist nowhere, and the team chose
+/// to skip them.
 const Map<String, List<String>> kPrereq = {
-  // Semester 2
-  'CSE 113': ['CSE 111'],
-  'CSE 114': ['CSE 112'],
-  // Semester 3
-  'CSE 211': ['CSE 113'],
-  'CSE 212': ['CSE 114'],
+  // Language and mathematics
+  'ENG 111': ['AA 099'],
+  'MATH 107': ['AA 150'],
+  'MATH 203': ['MATH 107'],
+  'MATH 205': ['MATH 107'],
   'MATH 207': ['MATH 107'],
-  // Semester 4
-  'CSE 123': ['CSE 113'],
-  'CSE 124': ['CSE 114'],
-  'EEE 213': ['EEE 111'],
-  'EEE 214': ['EEE 112'],
-  // Semester 5
-  'CSE 215': ['CSE 115'],
-  'CSE 216': ['EEE 112'],
-  'CSE 221': ['CSE 211', 'CSE 115'],
-  'CSE 222': ['CSE 212'],
-  'CSE 225': ['CSE 211'],
-  'CSE 226': ['CSE 212'],
-  'ENG 112': ['ENG 111'],
-  // Semester 6
-  'CSE 311': ['CSE 211'],
-  'CSE 312': ['CSE 212'],
-  'CSE 313': ['EEE 111'],
-  'CSE 315': ['CSE 215'],
-  'CSE 316': ['CSE 216'],
-  'MATH 205': ['MATH 207'],
-  // Semester 7
-  'CSE 223': ['EEE 213'],
-  'CSE 224': ['EEE 214'],
-  'CSE 325': ['CSE 313'],
-  'CSE 326': ['CSE 313'],
-  'CSE 242': ['CSE 225'],
-  'MATH 203': ['MATH 207'],
-  // Semester 8
-  'CSE 317': ['CSE 215'],
-  'CSE 319': ['CSE 221'],
-  'CSE 320': ['CSE 222'],
-  'CSE 342': ['CSE 315'],
   'MATH 301': ['MATH 107'],
-  // Semester 9
-  'CSE 321': ['CSE 123'],
-  'CSE 322': ['CSE 124'],
-  'CSE 327': ['CSE 221'],
-  'CSE 328': ['CSE 222'],
-  'CSE 411': ['CSE 225'],
-  'CSE 301': ['CSE 225', 'MATH 301'],
-  // Semester 10
+  // Interdisciplinary
+  'CSE 223': ['CSE 215'],
+  // Program core
+  'CSE 113': ['CSE 111'],
+  'CSE 123': ['CSE 113'],
+  'CSE 115': ['CSE 113'],
+  'CSE 211': ['CSE 113'],
+  'CSE 221': ['CSE 211', 'CSE 123'],
+  'CSE 225': ['CSE 123'],
+  'CSE 242': ['CSE 225', 'CSE 123'],
+  'CSE 311': ['CSE 123'],
+  'CSE 315': ['CSE 215', 'CSE 113'],
+  'CSE 317': ['CSE 211', 'CSE 123'],
+  'CSE 319': ['CSE 123', 'CSE 115', 'CSE 211'],
+  'CSE 321': ['CSE 221'],
+  'CSE 325': ['CSE 313'],
+  'CSE 327': ['CSE 115', 'CSE 221', 'CSE 315'],
+  'CSE 342': ['CSE 315'],
+  'CSE 411': ['CSE 123', 'CSE 211'],
+  'CSE 463': ['CSE 225', 'CSE 327'],
   'CSE 443': ['CSE 327'],
-  'CSE 463': ['CSE 327', 'MATH 301'],
+  // Options
+  'CSE 301': ['CSE 325', 'CSE 311', 'CSE 225'],
+  'CSE 429': ['CSE 225', 'CSE 221'],
   'CSE 439': ['CSE 321'],
+  'CSE 455': ['CSE 225', 'CSE 327'],
+  'CSE 457': ['CSE 325'],
   'CSE 459': ['CSE 325'],
-  'CSE 466': ['CSE 123'],
-  // Semester 11
-  'CSE 435': ['CSE 327'],
-  'CSE 436': ['CSE 328'],
-  'CSE 464': ['CSE 123'],
-  'HUM 203': ['ENG 112'],
+  'ETE 309': ['CSE 313'],
+  'ETE 310': ['CSE 313'],
+  'ETE 435': ['CSE 313'],
+  'ETE 436': ['CSE 313'],
+  'EEE 213': ['EEE 111'],
+  'ETE 317': ['CSE 215', 'EEE 213'],
 };
 
 /// Seed notices: (title, body, category, pinned, days ago).
@@ -193,9 +182,18 @@ const List<(String, String, String, List<String>)> kFaq = [
     ['extra', 'open credit', 'retake', 'improvement', 'request'],
   ),
   (
-    'How many credits can I take?',
-    'You can take at most 18 credits in a semester, regular and extra '
-        'courses together.',
+    'What if two courses clash?',
+    'If two courses meet at the same time, or their final exams are on the '
+        'same day, the app shows a warning before you confirm. You can '
+        'cancel, or accept the warning and take the courses anyway. It is '
+        'your decision.',
+    'Advising',
+    ['clash', 'conflict', 'same time', 'overlap', 'exam day'],
+  ),
+  (
+    'Is there a credit limit?',
+    'The app does not stop you at a credit limit. How many credits you can '
+        'take may depend on your faculty, so check with them.',
     'Advising',
     ['credit', 'credits', 'limit', 'maximum', 'how many'],
   ),

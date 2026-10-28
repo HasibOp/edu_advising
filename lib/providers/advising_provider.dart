@@ -178,16 +178,17 @@ class AdvisingProvider extends ChangeNotifier {
     }
   }
 
-  Future<List<Enrollment>> confirmSelection() async {
+  Future<List<Enrollment>> confirmSelection({bool acceptConflicts = false}) async {
     final ids = _selected.toList();
-    final result = await _busy(() => _api.enrollSelected(_studentId!, ids));
+    final result = await _busy(
+        () => _api.enrollSelected(_studentId!, ids, acceptConflicts: acceptConflicts));
     _selected.clear();
     notifyListeners();
     return result;
   }
 
-  Future<WaitlistEntry> joinWaitlist(String sectionId) =>
-      _busy(() => _api.joinWaitlist(_studentId!, sectionId));
+  Future<WaitlistEntry> joinWaitlist(String sectionId, {bool acceptConflicts = false}) =>
+      _busy(() => _api.joinWaitlist(_studentId!, sectionId, acceptConflicts: acceptConflicts));
 
   Future<void> leaveWaitlist(String entryId) => _busy(() => _api.leaveWaitlist(entryId));
 
@@ -196,6 +197,7 @@ class AdvisingProvider extends ChangeNotifier {
     required RequestKind kind,
     required RequestReason reason,
     String comment = '',
+    bool acceptConflicts = false,
   }) =>
       _busy(() => _api.createExtraRequest(
             studentId: _studentId!,
@@ -203,6 +205,7 @@ class AdvisingProvider extends ChangeNotifier {
             kind: kind,
             reason: reason,
             comment: comment,
+            acceptConflicts: acceptConflicts,
           ));
 
   Future<ExtraRequest> withdrawRequest(String requestId) =>

@@ -109,10 +109,14 @@ class ClearanceScreen extends StatelessWidget {
               Icon(icon, size: 20, color: ok ? AppColors.success : AppColors.warning),
               const SizedBox(width: 10),
               Expanded(child: Text(label)),
-              Text(value,
-                  style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: ok ? AppColors.success : AppColors.warning)),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(value,
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: ok ? AppColors.success : AppColors.warning)),
+              ),
             ],
           ),
         );
