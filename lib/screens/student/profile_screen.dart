@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/student.dart';
@@ -36,7 +38,7 @@ class ProfileScreen extends StatelessWidget {
                 Center(
                   child: Stack(
                     children: [
-                      Avatar(student.initials, size: 96),
+                      Avatar(student.initials, size: 96, photoUrl: student.photoUrl),
                       Positioned(
                         right: 0,
                         bottom: 0,
@@ -45,8 +47,7 @@ class ProfileScreen extends StatelessWidget {
                           shape: const CircleBorder(),
                           child: InkWell(
                             customBorder: const CircleBorder(),
-                            onTap: () => showAppSnackBar(context,
-                                'Photo upload will use Firebase Storage in the backend phase.'),
+                            onTap: () => _photo(context, student),
                             child: const Padding(
                               padding: EdgeInsets.all(7),
                               child: Icon(Icons.photo_camera_outlined, color: Colors.white, size: 18),
@@ -107,6 +108,57 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ],
             ),
+    );
+  }
+
+  Future<void> _photo(BuildContext context, Student student) async {
+    // null = sheet dismissed, 'remove' = delete the photo.
+    final choice = await showModalBottomSheet<Object>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheet) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Choose from gallery'),
+              onTap: () => Navigator.pop(sheet, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('Take a photo'),
+              onTap: () => Navigator.pop(sheet, ImageSource.camera),
+            ),
+            if (student.photoUrl.isNotEmpty)
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: AppColors.danger),
+                title: const Text('Remove photo', style: TextStyle(color: AppColors.danger)),
+                onTap: () => Navigator.pop(sheet, 'remove'),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !context.mounted) return;
+    final advising = context.read<AdvisingProvider>();
+    Uint8List? bytes;
+    if (choice is ImageSource) {
+      try {
+        final file = await ImagePicker()
+            .pickImage(source: choice, maxWidth: 512, maxHeight: 512, imageQuality: 80);
+        if (file == null) return;
+        bytes = await file.readAsBytes();
+      } catch (_) {
+        if (context.mounted) showAppSnackBar(context, 'Could not open the photo.', isError: true);
+        return;
+      }
+    }
+    if (!context.mounted) return;
+    await runWithFeedback(
+      context,
+      () => advising.updatePhoto(bytes),
+      success: bytes == null ? 'Photo removed' : 'Photo updated',
     );
   }
 

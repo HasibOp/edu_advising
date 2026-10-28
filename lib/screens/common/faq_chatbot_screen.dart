@@ -5,6 +5,7 @@ import '../../models/portal.dart';
 import '../../services/api_service.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/faq_matcher.dart';
+import '../../utils/pdf_export.dart';
 import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 
@@ -61,7 +62,27 @@ class _FaqChatbotScreenState extends State<FaqChatbotScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const EduAppBar(title: 'FAQ Chatbot', subtitle: 'Answers from the official FAQ'),
+      appBar: EduAppBar(
+        title: 'FAQ Chatbot',
+        subtitle: 'Answers from the official FAQ',
+        actions: [
+          IconButton(
+            tooltip: 'Download FAQ as PDF',
+            icon: const Icon(Icons.picture_as_pdf_outlined),
+            onPressed: () => runWithFeedback(context, () async {
+              final faqs = await context.read<ApiService>().fetchFaqs();
+              await PdfExport.shareTable(
+                title: 'Frequently Asked Questions',
+                filename: 'faq.pdf',
+                subtitle: ['${faqs.length} questions'],
+                headers: ['Category', 'Question', 'Answer'],
+                rows: [for (final f in faqs) [f.category, f.question, f.answer]],
+                columnFlex: {0: 1, 1: 2.2, 2: 4},
+              );
+            }),
+          ),
+        ],
+      ),
       body: FutureView<List<Faq>>(
         load: () => context.read<ApiService>().fetchFaqs(),
         builder: (context, faqs, _) => Column(

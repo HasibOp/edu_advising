@@ -5,6 +5,7 @@ import '../../models/portal.dart';
 import '../../providers/notification_provider.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
+import '../../utils/pdf_export.dart';
 import '../../widgets/badges.dart';
 import '../../widgets/common.dart';
 import '../../widgets/edu_app_bar.dart';
@@ -62,7 +63,35 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
     final notices =
         provider.notices.where((n) => _category == null || n.category == _category).toList();
     return Scaffold(
-      appBar: EduAppBar(title: 'Notice Board', subtitle: '${provider.unreadNotices} unread'),
+      appBar: EduAppBar(
+        title: 'Notice Board',
+        subtitle: '${provider.unreadNotices} unread',
+        actions: [
+          IconButton(
+            tooltip: 'Download PDF',
+            icon: const Icon(Icons.picture_as_pdf_outlined),
+            onPressed: () => runWithFeedback(
+              context,
+              () => PdfExport.shareTable(
+                title: 'Notice Board',
+                filename: 'notices.pdf',
+                subtitle: ['${notices.length} notices${_category == null ? '' : ' ($_category)'}'],
+                headers: ['Date', 'Category', 'Title', 'Notice'],
+                rows: [
+                  for (final n in notices)
+                    [
+                      Formatters.date(n.createdAt),
+                      n.category,
+                      '${n.pinned ? '[Pinned] ' : ''}${n.title}',
+                      n.body,
+                    ],
+                ],
+                columnFlex: {0: 1.1, 1: 1, 2: 2, 3: 4},
+              ),
+            ),
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         color: AppColors.primary,
         onRefresh: provider.refresh,

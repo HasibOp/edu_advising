@@ -115,6 +115,67 @@ void main() {
     expect(find.text('My Profile'), findsOneWidget);
   });
 
+  testWidgets('student 233000002 has courses but no Drop button', (tester) async {
+    await start(tester);
+    await login(tester, 'Student', '233000002');
+    await tester.tap(find.text('Menu').last);
+    await tester.pumpAndSettle();
+    await openMenu(tester, 'My classes');
+    expect(find.textContaining('CSE 4'), findsWidgets);
+    expect(find.textContaining(RegExp('^Drop', caseSensitive: false)), findsNothing);
+    expect(find.byIcon(Icons.remove_circle_outline), findsNothing);
+  });
+
+  testWidgets('extra request cannot be sent without a reason', (tester) async {
+    await start(tester);
+    await login(tester, 'Student', '233000001');
+    await tester.tap(find.text('Start advising'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Proceed to Advising'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Extra course'));
+    await tester.pumpAndSettle();
+    final request = find.widgetWithText(FilledButton, 'Request');
+    await scrollTo(tester, request.first);
+    await tester.tap(request.first);
+    await tester.pumpAndSettle();
+
+    FilledButton send() => tester.widget<FilledButton>(
+        find.ancestor(of: find.text('Send request'), matching: find.byWidgetPredicate((w) => w is FilledButton)));
+    expect(send().onPressed, isNull);
+    await tester.tap(find.text('Retake'));
+    await tester.pumpAndSettle();
+    expect(send().onPressed, isNotNull);
+  });
+
+  testWidgets('exam routine PDF needs one semester', (tester) async {
+    await start(tester);
+    await login(tester, 'Student', '233000001');
+    await tester.tap(find.text('Menu').last);
+    await tester.pumpAndSettle();
+    await openMenu(tester, 'Exam routine');
+    IconButton pdf() => tester.widget<IconButton>(find.ancestor(
+        of: find.byIcon(Icons.picture_as_pdf_outlined), matching: find.byType(IconButton)));
+    expect(pdf().onPressed, isNotNull); // own semester
+    await tester.tap(find.text('All'));
+    await tester.pumpAndSettle();
+    expect(pdf().onPressed, isNull);
+  });
+
+  testWidgets('inputs stay readable when the phone is in dark mode', (tester) async {
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+    await start(tester);
+    await tester.enterText(find.byType(TextField).at(0), '233000001');
+    await tester.pump();
+    for (final field in tester.widgetList<EditableText>(find.byType(EditableText))) {
+      final color = field.style.color!;
+      expect(color.computeLuminance(), lessThan(0.2), reason: 'input text must be dark on white');
+    }
+    final context = tester.element(find.byType(TextField).first);
+    expect(Theme.of(context).brightness, Brightness.light);
+  });
+
   testWidgets('not cleared student sees the red remark', (tester) async {
     await start(tester);
     await login(tester, 'Student', '233000004');

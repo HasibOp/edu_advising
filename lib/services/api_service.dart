@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../models/app_user.dart';
 import '../models/course.dart';
 import '../models/enrollment.dart';
@@ -37,6 +39,10 @@ abstract class ApiService {
     required String presentAddress,
     required String emergencyContact,
   });
+
+  /// Stores the profile photo (JPEG bytes) and returns the student with the
+  /// new `photoUrl`. Null bytes remove the photo. Firebase: upload to Storage.
+  Future<Student> updatePhoto(String studentId, Uint8List? bytes);
   Future<List<TranscriptEntry>> fetchTranscript(String studentId);
   Future<FinanceSummary> fetchFinance(String studentId);
 

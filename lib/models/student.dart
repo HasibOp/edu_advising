@@ -72,6 +72,7 @@ class Student {
     this.fatherName = '',
     this.motherName = '',
     this.emergencyContact = '',
+    this.photoUrl = '',
   });
 
   final String id;
@@ -106,6 +107,10 @@ class Student {
   final String motherName;
   final String emergencyContact;
 
+  /// Profile photo. Empty when none; the mock uses a `data:` URL, Firebase
+  /// Storage will give an https URL.
+  final String photoUrl;
+
   String get initials {
     final parts = name.split(' ').where((p) => p.isNotEmpty).toList();
     if (parts.isEmpty) return '?';
@@ -122,6 +127,7 @@ class Student {
     String? email,
     String? presentAddress,
     String? emergencyContact,
+    String? photoUrl,
   }) {
     return Student(
       id: id,
@@ -148,6 +154,7 @@ class Student {
       fatherName: fatherName,
       motherName: motherName,
       emergencyContact: emergencyContact ?? this.emergencyContact,
+      photoUrl: photoUrl ?? this.photoUrl,
     );
   }
 
@@ -176,6 +183,7 @@ class Student {
         fatherName: json['fatherName'] as String? ?? '',
         motherName: json['motherName'] as String? ?? '',
         emergencyContact: json['emergencyContact'] as String? ?? '',
+        photoUrl: json['photoUrl'] as String? ?? '',
       );
 
   Map<String, dynamic> toJson() => {
@@ -203,5 +211,6 @@ class Student {
         'fatherName': fatherName,
         'motherName': motherName,
         'emergencyContact': emergencyContact,
+        'photoUrl': photoUrl,
       };
 }

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../services/catalog.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/pdf_export.dart';
 import '../../widgets/common.dart';
 import '../../widgets/edu_app_bar.dart';
+import '../../widgets/state_views.dart';
 
 /// The 55 SoSET faculty, searchable by name or short form.
 class FacultyDirectoryScreen extends StatefulWidget {
@@ -26,7 +28,29 @@ class _FacultyDirectoryScreenState extends State<FacultyDirectoryScreen> {
             f.shortForm.toLowerCase().contains(_query))
         .toList();
     return Scaffold(
-      appBar: EduAppBar(title: 'Faculty Directory', subtitle: '${all.length} faculty members'),
+      appBar: EduAppBar(
+        title: 'Faculty Directory',
+        subtitle: '${all.length} faculty members',
+        actions: [
+          IconButton(
+            tooltip: 'Download PDF',
+            icon: const Icon(Icons.picture_as_pdf_outlined),
+            onPressed: () => runWithFeedback(
+              context,
+              () => PdfExport.shareTable(
+                title: 'Faculty Directory',
+                filename: 'faculty_directory.pdf',
+                subtitle: ['${list.length} faculty members'],
+                headers: ['Short form', 'Name', 'Position', 'Email', 'Phone'],
+                rows: [
+                  for (final f in list) [f.shortForm, f.name, f.position, f.email, f.phone],
+                ],
+                columnFlex: {0: 1, 1: 2.6, 2: 1.2, 3: 1.2, 4: 1.2},
+              ),
+            ),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(

@@ -1,6 +1,6 @@
 # EDU Advising: Status and Roadmap
 
-Status as of **26 Oct 2026**. For the team (Anamur, Hasibur, Sumi, Tarin) and
+Status as of **28 Oct 2026**. For the team (Anamur, Hasibur, Sumi, Tarin) and
 for any AI assistant working on this repository.
 
 **Sources of truth, in this order:**
@@ -22,8 +22,8 @@ Status labels:
 |---|---|---|---|
 | 0 | Tooling and project setup | n/a | DONE |
 | 1 | Real university data in the app | n/a | DONE (prerequisites need review) |
-| 2 | Frontend, all screens on dummy data (Plan §17 Phase A) | **01 Nov 2026** | DONE, with gaps listed in §2.4 |
-| 3 | Frontend wrap-up before submission | **01 Nov 2026** | TODO |
+| 2 | Frontend, all screens on dummy data (Plan §17 Phase A) | **01 Nov 2026** | DONE (remaining gaps in §2.4 need the backend) |
+| 3 | Frontend wrap-up before submission | **01 Nov 2026** | PARTIAL: code tasks done; team checks left |
 | 4 | Backend: Firebase, database, CRUD (Plan §17 Phase B) | **13 Dec 2026** | TODO (nothing started) |
 | 5 | Report, demo video, viva (Plan §17 Phase C) | **12-13 Dec 2026** | TODO |
 
@@ -74,13 +74,13 @@ Notes:
 ## Phase 2: Frontend (DONE, see gaps in §2.4)
 
 Architecture (Plan §14):
-- Screens call providers (`lib/providers/`), and providers call `ApiService` (`lib/services/api_service.dart`, 40 methods).
+- Screens call providers (`lib/providers/`), and providers call `ApiService` (`lib/services/api_service.dart`, 41 methods).
 - The app currently uses `MockApiService`: in-memory data that enforces the plan's rules.
 
-Verification run on 26 Oct 2026:
+Verification run on 28 Oct 2026:
 - `flutter analyze`: no issues.
-- `flutter test`: 33 tests pass.
-- Release APK installed on an Android 17 emulator (x86_64). Checked by hand there: login, clearance, Select all, Confirm, routine, PDF share.
+- `flutter test`: 40 tests pass.
+- Release APKs rebuilt (`--split-per-abi`). The 26 Oct build was checked by hand on an Android 17 emulator (login, clearance, Select all, Confirm, routine, PDF share); the 28 Oct changes are covered by tests but not yet checked by hand on a phone (task 3.1).
 
 ### 2.1 Student (Plan §7, student items 1-17)
 
@@ -88,7 +88,7 @@ Verification run on 26 Oct 2026:
 |---|---|---|---|
 | 1 | Login with role selector | DONE | `screens/login/login_screen.dart` |
 | 2 | Home: profile card, Advising card, account summary, notices | DONE | `screens/student/home_screen.dart` |
-| 3 | Profile | PARTIAL: photo upload is a placeholder (needs Firebase Storage) | `screens/student/profile_screen.dart` |
+| 3 | Profile | DONE: photo from gallery or camera, kept in memory until Firebase Storage (Phase 4) | `screens/student/profile_screen.dart` |
 | 4 | Menu: Advising, Classes, Reports & Transcripts, Finance, Communication, Reference | DONE | `screens/student/menu_screen.dart` |
 | 5 | Advising: clearance check, in the official portal's wording, with links | DONE | `screens/advising/clearance_screen.dart` |
 | 6 | Regular advising: sections with seats, checkboxes, Select all, Confirm, section lock | DONE | `screens/advising/advising_screen.dart`, `section_courses_screen.dart` |
@@ -128,15 +128,15 @@ Verification run on 26 Oct 2026:
 ### 2.4 Gaps, assumptions and deviations (be honest about these in the viva)
 
 **Gaps:**
-- **PDF export** exists on 9 screens:
-  - My Classes, Class routine, Exam routine, Offer list
-  - Transcript, Finance
-  - Section roster, Clearance list, Audit log
-
-  Plan §7 says "any list screen". These have no PDF button: Notice board, Faculty directory, Requests, FAQ, Prerequisite checker.
 - **Login accepts any password.** Real authentication is Phase 4.
 - **Notifications are in-app only.** Push notifications (FCM) are Phase 4.
-- **Profile photo** is a placeholder.
+- **Profile photo** is kept in memory only (`updatePhoto` stores a `data:` URL); it is lost on restart until Firebase Storage (Phase 4, step 4.14).
+
+**PDF export** (Plan §7, "any list screen") is on every list screen, 14 in total:
+- My Classes, Class routine, Exam routine, Offer list
+- Transcript, Finance
+- Notice board, Faculty directory, FAQ, Prerequisite checker
+- Section roster, Requests, Clearance list, Audit log
 
 **Assumptions** (not in the plan or the documents; change them if the team knows better):
 - Credit limit **18** (`AppConfig.maxCredits`). The plan has a credit limit but no number.
@@ -147,9 +147,8 @@ Verification run on 26 Oct 2026:
 
 **Deviations and behaviour the plan does not specify:**
 - Section groups are named **Section 1..n**, as in the real offer list, not A/B/C as in the plan's examples.
-- Faculty and Dean advising (`staffAdvise`) does **not** check the regular advising window. DECISION.
-- Approving an extra request does not check the window either. DECISION.
-- The Upload Deposit Form button opens the Accounts Clearance page until the real form link is known (`lib/utils/app_config.dart`, the one TODO in `lib/`).
+- Windows and staff (decided 28 Oct 2026): when a window is closed, **faculty** cannot add courses (`staffAdvise`; own-semester courses need the Regular window, other semesters the Extra window) or **approve** extra requests (Extra window). The **Dean** still can; the audit entry says "window closed". Faculty drops and rejections are not blocked.
+- The Upload Deposit Form button opens the Accounts Clearance page until the real form link is known (`AppLinks.uploadDepositForm` in `lib/utils/app_config.dart`, task 3.4).
 
 ### 2.5 Testing checklist (Plan §19)
 
@@ -157,15 +156,15 @@ Verification run on 26 Oct 2026:
 |---|---|---|
 | Select all + Confirm, all or none | `advising_flow_test.dart`: "select all + confirm ...", "enrolment is all-or-nothing ..." | DONE (API level; the Select all button is exercised in the widget test) |
 | Section lock; a full drop clears it | "select all + confirm ...", "a full drop clears the section lock" | DONE |
-| No Drop button for students | code only (`my_classes_screen.dart`) | NOT TESTED |
-| Extra request rules | "extra request: one per course, withdraw while pending ..." | PARTIAL: no test for "reason required" or "status replaces the button" |
+| No Drop button for students | `widget_smoke_test.dart`: "student 233000002 has courses but no Drop button" | DONE |
+| Extra request rules | "extra request: one per course, withdraw while pending ...", "extra request cannot be sent without a reason" | DONE (status replacing the button is code only) |
 | Faculty own / Dean any / bypass logged | three tests in `advising_flow_test.dart` | DONE |
-| Not cleared blocks advising; Give/Revoke | "not cleared students cannot advise; admin Give ..." | PARTIAL: Revoke is not tested |
-| Closed window blocks actions | "closed windows block advising and extra requests" | DONE |
+| Not cleared blocks advising; Give/Revoke | "not cleared students cannot advise; admin Give ...", "admin Revoke blocks advising again" | DONE |
+| Closed window blocks actions | "closed windows block advising and extra requests", "closed window blocks faculty advising and approval; the Dean can still act" | DONE |
 | Data matches the PDFs (11 semesters, exams Day 1-8) | `data_test.dart` checks structure | PARTIAL: no comparison with the PDFs; a person must spot-check |
-| PDF is one semester only | code only | NOT TESTED |
+| PDF is one semester only | "exam routine PDF needs one semester" (button disabled on All) | DONE |
 | Concurrency: 50 requests, 40 seats, exactly 40 succeed; double tap safe | `concurrency_test.dart`, "a duplicate tap cannot enrol twice" | DONE for the **mock** only; must be repeated on Firestore in Phase 4 |
-| Dark-mode inputs readable | `themeMode: light` plus explicit input colours | NOT TESTED |
+| Dark-mode inputs readable | "inputs stay readable when the phone is in dark mode" | DONE |
 
 Known issues from the old demo (Plan §20), all avoided:
 - The Select all method is called `selectAll`.
@@ -176,7 +175,7 @@ Known issues from the old demo (Plan §20), all avoided:
 
 ---
 
-## Phase 3: Frontend wrap-up, due 01 Nov 2026 (TODO)
+## Phase 3: Frontend wrap-up, due 01 Nov 2026 (PARTIAL)
 
 | # | Task | Owner | Done when |
 |---|---|---|---|
@@ -184,11 +183,11 @@ Known issues from the old demo (Plan §20), all avoided:
 | 3.2 | Check `kPrereq` in `lib/data/misc_data.dart` against the official curriculum | TBD | Corrected list committed; `flutter test` passes |
 | 3.3 | Spot-check the routine, exam routine and offer list in the app against the source PDFs: at least semesters 4, 10 and 11 (Plan §19) | TBD | Mismatches fixed in `resources/` and regenerated |
 | 3.4 | Get the Bank Deposit Slip Upload form link and set `AppLinks.uploadDepositForm` | TBD | Button opens the real form |
-| 3.5 | DECISION: should staff advising and request approval respect the advising window? | Team | Answer recorded in §2.4 and the code updated |
-| 3.6 | DECISION: add PDF to the remaining list screens, or accept the 9 screens | Team | Recorded here |
-| 3.7 | Optional: add tests for Revoke, "reason required" and "no Drop button" | TBD | Tests pass |
+| 3.5 | DECISION: should staff advising and request approval respect the advising window? | Team | **DONE** 28 Oct: faculty blocked, Dean not (§2.4) |
+| 3.6 | DECISION: add PDF to the remaining list screens, or accept the 9 screens | Team | **DONE** 28 Oct: PDF on all 14 list screens, as Plan §7 says |
+| 3.7 | Optional: add tests for Revoke, "reason required" and "no Drop button" | TBD | **DONE** 28 Oct, plus one-semester PDF and dark-mode tests |
 | 3.8 | Take screenshots of every screen for the report (Plan §17 step 12) | TBD | Folder of screenshots |
-| 3.9 | Recommended (not in the plan): put the project on GitHub so all four members share one copy. The folder is not a git repository yet | TBD | Repository created; everyone can pull |
+| 3.9 | Recommended (not in the plan): put the project on GitHub so all four members share one copy | Hasibur | **DONE**: `github.com/HasibOp/edu_advising`; add the other members as collaborators |
 
 How to produce the build:
 ```
@@ -205,7 +204,7 @@ Current state:
 - No `firebase.json`, `firestore.rules`, `functions/` or `google-services.json`.
 - No `ApiService` implementation other than `MockApiService`.
 
-**Goal (Plan §11, §17 Phase B):** a `FirebaseApiService implements ApiService`, with the same 40 methods, plugged into `main.dart`. Screens and providers must not need changes.
+**Goal (Plan §11, §17 Phase B):** a `FirebaseApiService implements ApiService`, with the same 41 methods, plugged into `main.dart`. Screens and providers must not need changes.
 
 Work in the plan's order:
 
@@ -224,7 +223,7 @@ Work in the plan's order:
 | 4.11 | FAQ (the keyword bot already works; optional LLM step through a Cloud Function, never a key in the app) | `fetchFaqs`, `saveFaq`, `deleteFaq` | §16 | Admin edits show up in the bot |
 | 4.12 | Security Rules: clients never write `enrolled`, `lockedSection` or `clearanceStatus` | n/a | §12 | Rules tested with the emulator suite |
 | 4.13 | Audit log for every action listed in Plan §10.17 | `fetchAuditLogs` | §10.17 | Dean and admin can read it; only functions write it |
-| 4.14 | Profile photo upload (Storage) | `updateContact`, or a new method | §10.1 | Photo shows on Profile |
+| 4.14 | Profile photo upload (Storage) | `updatePhoto` | §10.1 | Photo shows on Profile |
 
 Notes for Phase 4:
 - If the Blaze plan is not available, use the plan's fallback (Plan §11): client-side Firestore transactions, Security Rules, and waitlist promotion inside the drop transaction.
@@ -247,14 +246,13 @@ From Plan §17 Phase C and the course outline (Plan §1):
 
 ## Open decisions (do not guess: ask the team)
 
-1. Credit limit: is 18 correct?
-2. Room capacities for the seat-change limit (now assumed: theory 45, lab 30).
-3. Should faculty and Dean advising, and request approval, respect the advising window? (§2.4)
-4. PDF on every list screen, or the current 9? (§2.4)
-5. Real faculty emails, phones and positions (Plan §21 item 3).
-6. Bank Deposit Slip Upload form link (Plan §21 item 4).
-7. Group name (Plan §21 item 6).
-8. Who owns which Phase 3, 4 and 5 task: the plan names only Anamur, as frontend lead.
+1. Credit limit 18 and room capacities (theory 45, lab 30): kept on 28 Oct 2026; still assumptions, confirm with the department if possible.
+2. Real faculty emails, phones and positions (Plan §21 item 3).
+3. Bank Deposit Slip Upload form link (Plan §21 item 4).
+4. Group name (Plan §21 item 6).
+5. Who owns which Phase 3, 4 and 5 task: the plan names only Anamur, as frontend lead.
+
+Decided on 28 Oct 2026: windows for staff (§2.4) and PDF on every list screen.
 
 ## Rules for AI assistants on this repository
 

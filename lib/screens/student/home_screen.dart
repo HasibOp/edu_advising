@@ -52,7 +52,7 @@ class HomeScreen extends StatelessWidget {
             onTap: () => openPage(context, const ProfileScreen()),
             child: Row(
               children: [
-                Avatar(student.initials, size: 54),
+                Avatar(student.initials, size: 54, photoUrl: student.photoUrl),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(

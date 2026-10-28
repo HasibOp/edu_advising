@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import '../data/demo_data.dart';
 import '../data/misc_data.dart';
 import '../models/app_user.dart';
@@ -609,6 +612,15 @@ class MockApiService implements ApiService {
   }
 
   @override
+  Future<Student> updatePhoto(String studentId, Uint8List? bytes) async {
+    await _delay();
+    _students[studentId] = _base(studentId).copyWith(
+      photoUrl: bytes == null ? '' : 'data:image/jpeg;base64,${base64Encode(bytes)}',
+    );
+    return _view(studentId);
+  }
+
+  @override
   Future<List<TranscriptEntry>> fetchTranscript(String studentId) async {
     await _delay();
     return List.of(_transcripts[studentId] ?? const []);
@@ -714,6 +726,15 @@ class MockApiService implements ApiService {
         throw ApiException('${s.label} is not your course. You can only add your own courses.');
       }
     }
+    // Own-semester courses need the regular window, other semesters the extra
+    // window. Faculty are blocked while it is closed; the Dean is not.
+    final windowClosed = sections.any((s) => s.semesterNo == student.semesterNo
+        ? !_windows.regularOpen
+        : !_windows.extraOpen);
+    if (windowClosed && !actor.isDean) {
+      throw const ApiException(
+          'The advising window is closed. Only the Dean can add courses now.');
+    }
     final result = _validateAndCommit(student, sections, by: actor.id, checkLock: true);
     if (bypass) {
       _log(actor, AuditAction.deanBypass, studentId,
@@ -722,7 +743,7 @@ class MockApiService implements ApiService {
     }
     for (final e in result) {
       _log(actor, AuditAction.addByFaculty, studentId,
-          'Added ${e.label} (${e.type.label})',
+          'Added ${e.label} (${e.type.label})${windowClosed ? ', window closed' : ''}',
           bypassed: bypass);
     }
     _notify(studentId, 'Courses added',
@@ -918,6 +939,10 @@ class MockApiService implements ApiService {
     if (!r.isPending) throw ApiException('This request is already ${r.status.label}.');
     final s = _section(r.sectionId);
     if (!_owns(actor, s)) throw ApiException('${s.label} is not your course.');
+    if (approve && !_windows.extraOpen && !actor.isDean) {
+      throw const ApiException(
+          'The extra course window is closed. Only the Dean can approve requests now.');
+    }
 
     var status = RequestStatus.rejected;
     if (approve) {

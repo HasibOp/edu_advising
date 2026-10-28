@@ -222,6 +222,9 @@ class AdvisingProvider extends ChangeNotifier {
             emergencyContact: emergencyContact,
           ));
 
+  Future<void> updatePhoto(Uint8List? bytes) =>
+      _busy(() => _api.updatePhoto(_studentId!, bytes));
+
   void clear() {
     _studentId = null;
     _student = null;

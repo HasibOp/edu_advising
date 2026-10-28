@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/staff_provider.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
+import '../../utils/pdf_export.dart';
 import '../../widgets/badges.dart';
 import '../../widgets/common.dart';
 import '../../widgets/state_views.dart';
@@ -53,8 +54,39 @@ class _RequestsScreenState extends State<RequestsScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
         children: [
-          Text(user.isDean ? 'All extra course requests' : 'Requests for your courses',
-              style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary)),
+          Row(
+            children: [
+              Expanded(
+                child: Text(user.isDean ? 'All extra course requests' : 'Requests for your courses',
+                    style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary)),
+              ),
+              IconButton(
+                tooltip: 'Download PDF',
+                icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.primary),
+                onPressed: () => runWithFeedback(
+                  context,
+                  () => PdfExport.shareTable(
+                    title: 'Extra Course Requests',
+                    filename: _pending ? 'requests_pending.pdf' : 'requests_decided.pdf',
+                    subtitle: ['${_pending ? 'Pending' : 'Decided'}: ${list.length} requests'],
+                    headers: ['Date', 'Student', 'Section', 'Kind', 'Reason', 'Status'],
+                    rows: [
+                      for (final r in list)
+                        [
+                          Formatters.date(r.createdAt),
+                          '${r.studentId} ${r.studentName}',
+                          r.sectionLabel,
+                          r.kind.label,
+                          '${r.reason.label}${r.comment.isEmpty ? '' : ': ${r.comment}'}',
+                          r.status.label,
+                        ],
+                    ],
+                    columnFlex: {0: 1, 1: 2.2, 2: 1.1, 3: 0.7, 4: 2, 5: 1},
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 10),
           SegmentedButton<bool>(
             segments: [

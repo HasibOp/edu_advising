@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:edu_advising/models/app_user.dart';
 import 'package:edu_advising/models/course.dart';
 import 'package:edu_advising/models/enrollment.dart';
@@ -178,6 +180,42 @@ void main() {
     final e = (await api.fetchEnrollments('233000006')).single;
     expect(e.type, EnrollmentType.extra);
     expect(e.label, 'CSE 225.6');
+  });
+
+  test('admin Revoke blocks advising again, everywhere', () async {
+    final s = await section('CSE 459', 10, 2);
+    final revoked = await api.setClearance(admin, '233000001', ClearanceAction.revoke);
+    expect(revoked.clearanceStatus, ClearanceStatus.notCleared);
+    expect((await api.fetchStudent('233000001')).clearanceStatus, ClearanceStatus.notCleared);
+    expect(() => api.enrollSelected('233000001', [s.id]), throwsA(isA<ApiException>()));
+    expect(() => api.staffAdvise(trina, '233000001', [s.id]), throwsA(isA<ApiException>()));
+    final logs = await api.fetchAuditLogs();
+    expect(logs.any((l) => l.action == AuditAction.clearanceRevoked && l.targetId == '233000001'),
+        isTrue);
+  });
+
+  test('closed window blocks faculty advising and approval; the Dean can still act', () async {
+    final s = await section('CSE 225', 5, 6);
+    final r = await api.createExtraRequest(
+        studentId: '233000006', sectionId: s.id, kind: RequestKind.add, reason: RequestReason.retake);
+    final w = await api.fetchWindows();
+    await api.updateWindows(admin, w.copyWith(regularOpen: false, extraOpen: false));
+
+    final mine = await section('CSE 463', 10, 3);
+    expect(() => api.staffAdvise(trina, '233000001', [mine.id]), throwsA(isA<ApiException>()));
+    expect(() => api.decideExtraRequest(trina, r.id, true, ''), throwsA(isA<ApiException>()));
+
+    expect(await api.staffAdvise(dean, '233000001', [mine.id]), hasLength(1));
+    expect((await api.decideExtraRequest(dean, r.id, true, '')).status, RequestStatus.enrolled);
+    final logs = await api.fetchAuditLogs();
+    expect(logs.any((l) => l.actorId == 'Dr. MK' && l.details.contains('window closed')), isTrue);
+  });
+
+  test('profile photo is saved and can be removed', () async {
+    final withPhoto = await api.updatePhoto('233000001', Uint8List.fromList([1, 2, 3]));
+    expect(withPhoto.photoUrl, startsWith('data:image/jpeg;base64,'));
+    expect((await api.fetchStudent('233000001')).photoUrl, withPhoto.photoUrl);
+    expect((await api.updatePhoto('233000001', null)).photoUrl, isEmpty);
   });
 
   test('seat change stays between enrolment and room capacity', () async {

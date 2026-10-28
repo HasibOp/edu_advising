@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../utils/app_theme.dart';
@@ -183,7 +185,7 @@ class NoticeBanner extends StatelessWidget {
 }
 
 class Avatar extends StatelessWidget {
-  const Avatar(this.initials, {super.key, this.size = 44, this.light = false});
+  const Avatar(this.initials, {super.key, this.size = 44, this.light = false, this.photoUrl = ''});
 
   final String initials;
   final double size;
@@ -191,8 +193,27 @@ class Avatar extends StatelessWidget {
   /// White circle with maroon text (for dark backgrounds).
   final bool light;
 
+  /// Shown instead of the initials when set (`data:` or https URL).
+  final String photoUrl;
+
+  static String? _cachedUrl;
+  static ImageProvider? _cachedImage;
+
+  /// Decodes a `data:` URL once, so rebuilds do not flicker.
+  static ImageProvider? _image(String url) {
+    if (url.isEmpty) return null;
+    if (url == _cachedUrl) return _cachedImage;
+    final ImageProvider image = url.startsWith('data:')
+        ? MemoryImage(base64Decode(url.substring(url.indexOf(',') + 1))) as ImageProvider
+        : NetworkImage(url);
+    _cachedUrl = url;
+    _cachedImage = image;
+    return image;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final image = _image(photoUrl);
     return Container(
       width: size,
       height: size,
@@ -201,15 +222,18 @@ class Avatar extends StatelessWidget {
         color: light ? Colors.white : AppColors.tint,
         shape: BoxShape.circle,
         border: Border.all(color: AppColors.gold, width: 1.5),
+        image: image == null ? null : DecorationImage(image: image, fit: BoxFit.cover),
       ),
-      child: Text(
-        initials,
-        style: TextStyle(
-          color: AppColors.primary,
-          fontWeight: FontWeight.w700,
-          fontSize: size * 0.36,
-        ),
-      ),
+      child: image != null
+          ? null
+          : Text(
+              initials,
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+                fontSize: size * 0.36,
+              ),
+            ),
     );
   }
 }

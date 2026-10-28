@@ -27,8 +27,9 @@ class AppLinks {
   static const String advisingInfoPortal = 'https://advising.eastdelta.edu.bd';
   static const String ePaymentPortal = 'https://epayment.eastdelta.edu.bd';
 
-  /// TODO(team): replace with the direct Bank Deposit Slip Upload form link.
-  /// Until then this opens the clearance page, which links to the form.
+  /// Bank Deposit Slip Upload form. The direct link is not known yet
+  /// (PROJECT_ROADMAP.md task 3.4), so this opens the clearance page, which
+  /// links to the form.
   static const String uploadDepositForm = clearancePortal;
 
   static Future<void> open(BuildContext context, String url) async {

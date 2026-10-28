@@ -14,7 +14,7 @@ to Firebase in the backend phase.
 flutter pub get
 flutter run                 # phone over USB, or an emulator
 flutter run -d chrome       # quick check in the browser
-flutter test                # 33 tests: rules, data, concurrency, every screen
+flutter test                # 40 tests: rules, data, concurrency, every screen
 flutter build apk --release # installable APK in build/app/outputs/flutter-apk/
 ```
 
@@ -88,6 +88,8 @@ tool/generate_data.py   rebuilds lib/data from resources/pdfs
   increase) promotes the first student automatically.
 - Students never drop regular courses. Faculty add/drop their own courses
   directly; the Dean any course, also without clearance (logged as DEAN_BYPASS).
+  A closed window stops faculty adding courses and approving requests; the
+  Dean can still act (logged).
 - Extra course: request with a reason, one per course, withdraw only while
   Pending, faculty or Dean approves (enrols as EXTRA) or rejects.
 - Administrator: Give / Revoke / Special clearance, Regular and Extra windows.
@@ -106,7 +108,9 @@ Screens only talk to providers, and providers only talk to `ApiService`
 2. Seed Firestore from `kOffer`, `kRoutine`, `kExam`, `kFaculty`, `kPrereq`.
 3. In `main.dart`, replace `MockApiService()` with the Firebase service.
 4. Throw `ApiException('message')` for errors the user should see.
-5. Fill in `AppLinks.uploadDepositForm` in `lib/utils/app_config.dart` with the
+5. `updatePhoto` should upload to Firebase Storage and save the download
+   URL as `photoUrl` (the mock keeps a `data:` URL in memory).
+6. Fill in `AppLinks.uploadDepositForm` in `lib/utils/app_config.dart` with the
    real Bank Deposit Slip form link.
 
 ## Notes

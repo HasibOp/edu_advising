@@ -8,6 +8,7 @@ import '../../services/api_service.dart';
 import '../../services/catalog.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
+import '../../utils/pdf_export.dart';
 import '../../widgets/badges.dart';
 import '../../widgets/common.dart';
 import '../../widgets/edu_app_bar.dart';
@@ -49,6 +50,43 @@ class _PrereqCheckerScreenState extends State<PrereqCheckerScreen> {
     );
   }
 
+  /// Every course that has a prerequisite; for a student also whether each
+  /// one is passed.
+  Future<void> _pdf(List<TranscriptEntry>? transcript) {
+    final catalog = Catalog.instance;
+    final passed = {
+      for (final t in transcript ?? const <TranscriptEntry>[])
+        if (t.passed) t.courseCode,
+    };
+    final withPrereq =
+        _allCourses.where((c) => catalog.prerequisitesOf(c.code).isNotEmpty).toList();
+    String status(Course c) {
+      final missing = catalog.prerequisitesOf(c.code).where((p) => !passed.contains(p));
+      return missing.isEmpty ? 'Can take' : 'Missing ${missing.join(', ')}';
+    }
+
+    return PdfExport.shareTable(
+      title: 'Prerequisites',
+      filename: 'prerequisites.pdf',
+      subtitle: [
+        '${withPrereq.length} courses with a prerequisite',
+        if (transcript != null) 'Status compared with your transcript',
+      ],
+      headers: ['Sem', 'Course', 'Title', 'Prerequisites', if (transcript != null) 'Status'],
+      rows: [
+        for (final c in withPrereq)
+          [
+            '${c.semesterNo}',
+            c.code,
+            c.title,
+            catalog.prerequisitesOf(c.code).join(', '),
+            if (transcript != null) status(c),
+          ],
+      ],
+      columnFlex: {0: 0.5, 1: 1, 2: 3, 3: 1.6, if (transcript != null) 4: 1.6},
+    );
+  }
+
   Widget _body(List<TranscriptEntry>? transcript) {
     final courses = _allCourses
         .where((c) =>
@@ -59,12 +97,23 @@ class _PrereqCheckerScreenState extends State<PrereqCheckerScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
       children: [
-        SearchField(
-          hint: 'Type a course code or title, e.g. CSE 443',
-          onChanged: (v) => setState(() {
-            _query = v.trim().toLowerCase();
-            _course = null;
-          }),
+        Row(
+          children: [
+            Expanded(
+              child: SearchField(
+                hint: 'Type a course code or title, e.g. CSE 443',
+                onChanged: (v) => setState(() {
+                  _query = v.trim().toLowerCase();
+                  _course = null;
+                }),
+              ),
+            ),
+            IconButton(
+              tooltip: 'Download PDF',
+              icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.primary),
+              onPressed: () => runWithFeedback(context, () => _pdf(transcript)),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         if (_course != null)
