@@ -15,8 +15,6 @@ import '../../widgets/state_views.dart';
 import '../advising/clearance_screen.dart';
 import 'class_routine_screen.dart';
 
-/// What the student is enrolled in. There is no Drop button: only faculty
-/// or the Dean can drop a regular course.
 class MyClassesScreen extends StatelessWidget {
   const MyClassesScreen({super.key});
 

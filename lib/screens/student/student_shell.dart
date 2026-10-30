@@ -7,8 +7,6 @@ import '../../widgets/edu_app_bar.dart';
 import 'home_screen.dart';
 import 'menu_screen.dart';
 
-/// Student app: bottom tabs Home and Menu only. Everything else is opened
-/// from the Menu (or from cards on Home).
 class StudentShell extends StatefulWidget {
   const StudentShell({super.key});
 

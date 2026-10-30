@@ -24,13 +24,6 @@ class _WaitItem {
   final DateTime createdAt;
 }
 
-/// In-memory backend for the frontend phase.
-///
-/// It enforces the same rules the Cloud Functions will: validation order,
-/// all-or-nothing enrolment, section lock, idempotent enrolment IDs, waitlist
-/// promotion and the audit log. Each call waits [latency] first and then runs
-/// its read-check-write without any await, so concurrent calls behave like
-/// server transactions (see test/concurrency_test.dart).
 class MockApiService implements ApiService {
   MockApiService({
     this.latency = const Duration(milliseconds: 300),
@@ -73,10 +66,6 @@ class MockApiService implements ApiService {
   DateTime get _now => DateTime.now();
   String _nextId(String prefix) => '$prefix${++_seq}';
 
-  // ---------------------------------------------------------------------
-  // Seed data
-  // ---------------------------------------------------------------------
-
   void _seedSections(bool simulateSeats) {
     for (final s in _catalog.offerSections()) {
       _sections[s.id] = simulateSeats
@@ -87,8 +76,6 @@ class MockApiService implements ApiService {
     }
   }
 
-  /// Seats taken by students outside the demo, so the counts look real.
-  /// Semester 10 Section 1 is full to show the waitlist.
   int _simulatedSeats(CourseSection s, SectionPart p) {
     if (s.semesterNo == 10 && s.groupNo == 1 && s.courseCode != 'CSE 466') {
       return p.capacity;
@@ -110,8 +97,6 @@ class MockApiService implements ApiService {
     ('A+', 4.0), ('A', 3.75), ('A-', 3.5), ('B+', 3.25), ('B', 3.0), ('B-', 2.75), ('C+', 2.5),
   ];
 
-  /// Registers a dummy student with transcript and finance. Public so tests
-  /// can add their own students.
   void addDemoStudent(DemoStudent d) {
     final index = _students.length;
     final transcript = <TranscriptEntry>[];
@@ -204,7 +189,6 @@ class MockApiService implements ApiService {
     final now = _now;
     const day = Duration(days: 1);
 
-    // Tanvir is already enrolled in three courses of Semester 10 Section 2.
     final tanvir = _students['233000002']!;
     for (final code in ['CSE 443', 'CSE 463', 'CSE 439']) {
       _commit(tanvir, _sections[CourseSection.makeId(code, 10, 2)]!,
@@ -213,7 +197,6 @@ class MockApiService implements ApiService {
     _log(_staffUser('233000002'), AuditAction.enroll, '233000002',
         'Enrolled in CSE 443.2, CSE 463.2, CSE 439.2', at: now.subtract(day));
 
-    // Rumana waits for a seat in the full CSE 443.1.
     _waitlist.add(_WaitItem(_nextId('W'), '233000012',
         CourseSection.makeId('CSE 443', 10, 1), now.subtract(const Duration(hours: 5))));
 
@@ -298,7 +281,6 @@ class MockApiService implements ApiService {
         'Rejected CSE 211.1 for 233000008', at: now.subtract(day));
   }
 
-  /// Minimal user for seeded log lines.
   AppUser _staffUser(String id) {
     if (id == 'admin') {
       return const AppUser(id: 'admin', role: UserRole.admin, name: 'Administrator');
@@ -309,17 +291,12 @@ class MockApiService implements ApiService {
     return AppUser(id: id, role: UserRole.instructor, name: id, shortName: id);
   }
 
-  // ---------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------
-
   Student _base(String id) {
     final s = _students[id];
     if (s == null) throw ApiException('No student found with ID $id.');
     return s;
   }
 
-  /// Student with the derived lock/advising flags filled in.
   Student _view(String id) {
     final s = _base(id);
     final group = _lockedGroup(s);
@@ -360,7 +337,6 @@ class MockApiService implements ApiService {
     return s.parts.any((p) => _catalog.teaches(short, s.courseCode, p.sectionNo));
   }
 
-  /// Faculty to notify about a section, plus the Dean.
   Set<String> _ownersOf(CourseSection s) {
     final ids = <String>{AppConfig.deanShortForm};
     for (final p in s.parts) {
@@ -396,7 +372,6 @@ class MockApiService implements ApiService {
     ));
   }
 
-  /// Takes one seat and writes the enrolment. No checks: callers validate.
   Enrollment _commit(Student student, CourseSection section, EnrollmentType type,
       String by, DateTime at) {
     final part = section.nextPart!;
@@ -424,9 +399,6 @@ class MockApiService implements ApiService {
     return enrollment;
   }
 
-  /// Runs prerequisite -> seat -> clashes for all [sections], then enrols in
-  /// all of them, or throws and changes nothing. Class-time and exam-day
-  /// clashes throw a [ConflictException] unless [acceptConflicts] is true.
   List<Enrollment> _validateAndCommit(
     Student student,
     List<CourseSection> sections, {
@@ -440,7 +412,6 @@ class MockApiService implements ApiService {
     EnrollmentType typeOf(CourseSection s) =>
         s.semesterNo == student.semesterNo ? EnrollmentType.regular : EnrollmentType.extra;
 
-    // Section lock (regular courses only).
     if (checkLock) {
       final groups = {
         for (final s in sections)
@@ -455,7 +426,6 @@ class MockApiService implements ApiService {
       }
     }
 
-    // Already taken.
     final taken = {for (final e in active) e.courseCode};
     final picked = <String>{};
     for (final s in sections) {
@@ -467,7 +437,6 @@ class MockApiService implements ApiService {
       }
     }
 
-    // Prerequisites.
     final passed = _passed(student.id);
     for (final s in sections) {
       final missing = AdvisingRules.missingPrerequisites(s.courseCode, passed);
@@ -476,14 +445,12 @@ class MockApiService implements ApiService {
       }
     }
 
-    // Seats.
     for (final s in sections) {
       if (_section(s.id).isFull) {
         throw ApiException('${s.label} is full. Join the waitlist for the next free seat.');
       }
     }
 
-    // Clashes only warn. The user can accept them and enrol anyway.
     if (!acceptConflicts) {
       final conflicts = _conflictsOf(active, sections);
       if (conflicts.isNotEmpty) throw ConflictException(conflicts);
@@ -495,8 +462,6 @@ class MockApiService implements ApiService {
     ];
   }
 
-  /// Class-time and exam-day clashes of [sections] with the courses already
-  /// taken and with each other.
   List<String> _conflictsOf(List<Enrollment> active, List<CourseSection> sections) {
     final existingSlots = <String, List<ClassSlot>>{
       for (final e in active) e.label: _catalog.slotsFor(e.courseCode, e.sectionNo),
@@ -533,7 +498,6 @@ class MockApiService implements ApiService {
     _promoteWaitlist(section.id);
   }
 
-  /// Gives free seats to the waitlist in server-time order.
   void _promoteWaitlist(String sectionId) {
     final queue = _waitlist.where((w) => w.sectionId == sectionId).toList()
       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
@@ -543,8 +507,6 @@ class MockApiService implements ApiService {
       _waitlist.remove(w);
       final student = _base(w.studentId);
       try {
-        // The student chose this course when joining the waitlist (and saw any
-        // clash warning then), so a clash must not cost them the seat.
         _validateAndCommit(student, [section],
             by: 'waitlist', checkLock: true, acceptConflicts: true);
         _log(_staffUser(student.id), AuditAction.waitlistPromote, student.id,
@@ -557,10 +519,6 @@ class MockApiService implements ApiService {
       }
     }
   }
-
-  // ---------------------------------------------------------------------
-  // Auth
-  // ---------------------------------------------------------------------
 
   @override
   Future<AppUser> login(String username, String password, UserRole role) async {
@@ -594,10 +552,6 @@ class MockApiService implements ApiService {
         return const AppUser(id: 'admin', role: UserRole.admin, name: 'Administrator');
     }
   }
-
-  // ---------------------------------------------------------------------
-  // Students
-  // ---------------------------------------------------------------------
 
   @override
   Future<Student> fetchStudent(String studentId) async {
@@ -652,10 +606,6 @@ class MockApiService implements ApiService {
     return f;
   }
 
-  // ---------------------------------------------------------------------
-  // Sections & seats
-  // ---------------------------------------------------------------------
-
   @override
   Future<List<CourseSection>> fetchSections({int? semesterNo}) async {
     await _delay();
@@ -689,10 +639,6 @@ class MockApiService implements ApiService {
     _promoteWaitlist(s.id);
     return _sections[s.id]!;
   }
-
-  // ---------------------------------------------------------------------
-  // Enrolment
-  // ---------------------------------------------------------------------
 
   @override
   Future<List<Enrollment>> fetchEnrollments(String studentId) async {
@@ -742,8 +688,6 @@ class MockApiService implements ApiService {
           'This student is Not cleared. Only the Dean can advise without clearance.');
     }
     final sections = sectionIds.map(_section).toList();
-    // Staff follow the windows too: regular courses need the regular window,
-    // other-semester (extra) courses need the extra window.
     for (final s in sections) {
       final extra = s.semesterNo != student.semesterNo;
       if (extra ? !_windows.extraOpen : !_windows.regularOpen) {
@@ -789,10 +733,6 @@ class MockApiService implements ApiService {
     _log(actor, AuditAction.dropByFaculty, e.studentId, 'Dropped ${e.label} (${e.type.label})');
     _notify(e.studentId, 'Course dropped', '${actor.name} dropped ${e.label} ${e.title}.');
   }
-
-  // ---------------------------------------------------------------------
-  // Waitlist
-  // ---------------------------------------------------------------------
 
   WaitlistEntry _entry(_WaitItem w) {
     final s = _sections[w.sectionId];
@@ -861,10 +801,6 @@ class MockApiService implements ApiService {
     await _delay();
     _waitlist.removeWhere((w) => w.id == entryId);
   }
-
-  // ---------------------------------------------------------------------
-  // Extra course requests
-  // ---------------------------------------------------------------------
 
   List<ExtraRequest> _sorted(Iterable<ExtraRequest> items) => items.toList()
     ..sort((a, b) {
@@ -972,7 +908,6 @@ class MockApiService implements ApiService {
     if (!r.isPending) throw ApiException('This request is already ${r.status.label}.');
     final s = _section(r.sectionId);
     if (!_owns(actor, s)) throw ApiException('${s.label} is not your course.');
-    // Rejecting is always possible; approving needs the extra course window.
     if (approve && !_windows.extraOpen) {
       throw const ApiException('The extra course window is closed. You can still reject.');
     }
@@ -980,7 +915,6 @@ class MockApiService implements ApiService {
     var status = RequestStatus.rejected;
     if (approve) {
       if (r.kind == RequestKind.add) {
-        // The student accepted any clash when sending the request.
         _validateAndCommit(_base(r.studentId), [s],
             by: actor.id, checkLock: false, acceptConflicts: true);
         status = RequestStatus.enrolled;
@@ -1008,10 +942,6 @@ class MockApiService implements ApiService {
     );
     return updated;
   }
-
-  // ---------------------------------------------------------------------
-  // Administrator
-  // ---------------------------------------------------------------------
 
   void _requireAdmin(AppUser actor) {
     if (!actor.isAdmin) throw const ApiException('Only the Administrator can do this.');
@@ -1182,10 +1112,6 @@ class MockApiService implements ApiService {
     await _delay();
     return _audit.reversed.toList();
   }
-
-  // ---------------------------------------------------------------------
-  // Notices, FAQ, notifications
-  // ---------------------------------------------------------------------
 
   @override
   Future<List<Notice>> fetchNotices() async {

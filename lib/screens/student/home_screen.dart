@@ -47,7 +47,6 @@ class HomeScreen extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
-          // Profile card (opens My Profile).
           AppCard(
             onTap: () => openPage(context, const ProfileScreen()),
             child: Row(
@@ -157,7 +156,6 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-/// The highlighted Advising card: clearance, window and progress.
 class _AdvisingCard extends StatelessWidget {
   const _AdvisingCard({required this.advising});
 

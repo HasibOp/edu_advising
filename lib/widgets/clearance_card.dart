@@ -5,8 +5,6 @@ import '../utils/app_config.dart';
 import '../utils/app_theme.dart';
 import 'badges.dart';
 
-/// Result box in the style of the university's Accounts Clearance Status
-/// page: name, ID and the remark in green (allowed) or red (not cleared).
 class ClearanceResultCard extends StatelessWidget {
   const ClearanceResultCard({super.key, required this.student});
 
@@ -61,7 +59,6 @@ class ClearanceResultCard extends StatelessWidget {
   }
 }
 
-/// The blue information box with the three official links.
 class PortalLinksBox extends StatelessWidget {
   const PortalLinksBox({super.key});
 

@@ -112,7 +112,6 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Future<void> _photo(BuildContext context, Student student) async {
-    // null = sheet dismissed, 'remove' = delete the photo.
     final choice = await showModalBottomSheet<Object>(
       context: context,
       showDragHandle: true,

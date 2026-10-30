@@ -8,7 +8,6 @@ class Course {
     required this.semesterNo,
   });
 
-  /// e.g. "CSE 443".
   final String code;
   final String title;
   final double credits;
@@ -27,7 +26,6 @@ class Course {
 
 enum SeatLevel { open, low, full }
 
-/// One real section, e.g. CSE 443.3 with 28 seats.
 class SectionPart {
   const SectionPart({
     required this.sectionNo,
@@ -58,11 +56,6 @@ class SectionPart {
       );
 }
 
-/// A course inside one section group of a semester.
-///
-/// Usually one [SectionPart]. Split labs have two: Semester 2 Section 1 holds
-/// PHY 102.1 (24 seats) plus 8 seats of PHY 102.11. A student is placed in
-/// the first part that still has a seat.
 class CourseSection {
   const CourseSection({
     required this.id,
@@ -74,14 +67,12 @@ class CourseSection {
     required this.parts,
   });
 
-  /// e.g. "CSE443-10-3": course CSE 443, semester 10, section group 3.
   final String id;
   final String courseCode;
   final String title;
   final double credits;
   final int semesterNo;
 
-  /// The section group ("Section 3") this course belongs to.
   final int groupNo;
   final List<SectionPart> parts;
 
@@ -99,18 +90,14 @@ class CourseSection {
     return SeatLevel.open;
   }
 
-  /// The main section number (the first part).
   int get sectionNo => parts.first.sectionNo;
 
-  /// Course code with section only, e.g. "CSE 443.3" (no faculty short form).
   String get label => Formatters.sectionLabel(courseCode, sectionNo);
 
-  /// "CSE 102.1 + .11" when the course is split over two parts.
   String get fullLabel => parts.length == 1
       ? label
       : '$label + ${parts.skip(1).map((p) => '.${p.sectionNo}').join(' + ')}';
 
-  /// The part a new student would be placed in, or null when full.
   SectionPart? get nextPart {
     for (final p in parts) {
       if (p.hasSeat) return p;
@@ -153,7 +140,6 @@ class CourseSection {
       };
 }
 
-/// "Section 3" of a semester: one course section of every course.
 class SectionGroup {
   const SectionGroup({
     required this.semesterNo,
@@ -167,7 +153,6 @@ class SectionGroup {
 
   String get name => 'Section $groupNo';
 
-  /// The tightest course decides how full the group looks.
   CourseSection? get bottleneck {
     if (sections.isEmpty) return null;
     return sections.reduce((a, b) => a.seatsLeft <= b.seatsLeft ? a : b);
@@ -176,7 +161,6 @@ class SectionGroup {
   int get fullCourses => sections.where((s) => s.isFull).length;
   double get totalCredits => sections.fold(0, (sum, s) => sum + s.credits);
 
-  /// Splits a flat list of sections into groups, ordered by group number.
   static List<SectionGroup> fromSections(int semesterNo, List<CourseSection> sections) {
     final byGroup = <int, List<CourseSection>>{};
     for (final s in sections.where((s) => s.semesterNo == semesterNo)) {

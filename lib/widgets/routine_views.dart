@@ -5,8 +5,6 @@ import '../services/catalog.dart';
 import '../utils/app_theme.dart';
 import '../utils/formatters.dart';
 
-/// Weekly timetable: one column per day, blocks placed by their real time,
-/// so theory (8.30-10.00) and lab (9.30-11.30) times both fit.
 class WeekRoutineGrid extends StatelessWidget {
   const WeekRoutineGrid({super.key, required this.slots});
 
@@ -36,7 +34,6 @@ class WeekRoutineGrid extends StatelessWidget {
         height: _headerHeight + height + 8,
         child: Stack(
           children: [
-            // Day headers.
             for (var i = 0; i < days.length; i++)
               Positioned(
                 left: _axisWidth + i * _dayWidth,
@@ -55,7 +52,6 @@ class WeekRoutineGrid extends StatelessWidget {
                           color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
                 ),
               ),
-            // Hour lines and labels.
             for (var m = (start + 29) ~/ 30 * 30; m <= end; m += 30)
               Positioned(
                 left: 0,
@@ -77,7 +73,6 @@ class WeekRoutineGrid extends StatelessWidget {
                   ],
                 ),
               ),
-            // Class blocks.
             for (final s in slots)
               if (days.contains(s.day))
                 Positioned(
@@ -97,9 +92,6 @@ class WeekRoutineGrid extends StatelessWidget {
   }
 }
 
-/// Classes that overlap on the same day (two lab rooms at the same time)
-/// share the day column side by side instead of hiding each other.
-/// Returns, for each slot, (lane, number of lanes in its group).
 @visibleForTesting
 Map<ClassSlot, (int, int)> layoutRoutineLanes(List<ClassSlot> slots) {
   final result = <ClassSlot, (int, int)>{};
@@ -146,7 +138,6 @@ class _Block extends StatelessWidget {
 
   final ClassSlot slot;
 
-  /// Narrow block (shared column): shows the label only.
   final bool compact;
 
   @override
@@ -190,7 +181,6 @@ class _Block extends StatelessWidget {
   }
 }
 
-/// The same classes listed day by day, easier to read on a small phone.
 class DayRoutineList extends StatelessWidget {
   const DayRoutineList({super.key, required this.slots});
 
@@ -249,7 +239,6 @@ class DayRoutineList extends StatelessWidget {
   }
 }
 
-/// Rows for a routine PDF: day, time, course, type, room, faculty.
 List<List<String>> routinePdfRows(List<ClassSlot> slots) {
   final days = Catalog.instance.days;
   final sorted = slots.toList()

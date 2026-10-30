@@ -12,7 +12,6 @@ import '../../widgets/badges.dart';
 import '../../widgets/common.dart';
 import '../../widgets/state_views.dart';
 
-/// Open credit: vacant seats in other semesters, requested with a reason.
 class ExtraCourseTab extends StatefulWidget {
   const ExtraCourseTab({super.key});
 
@@ -318,7 +317,6 @@ class _RequestSheetState extends State<_RequestSheet> {
     final advising = context.read<AdvisingProvider>();
     var sent = false;
     try {
-      // A clash is shown as an alert; the student may still send the request.
       final request = await runAllowingConflicts(
         context,
         (accept) => advising.sendRequest(

@@ -16,7 +16,6 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  /// Returns the signed-in user, or null with [error] set.
   Future<AppUser?> login(String username, String password, UserRole role) async {
     _isLoading = true;
     _error = null;

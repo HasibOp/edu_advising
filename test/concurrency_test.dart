@@ -4,10 +4,6 @@ import 'package:edu_advising/models/course.dart';
 import 'package:edu_advising/services/mock_api_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Plan section 6: 50 simultaneous requests at a full-size section must give
-/// exactly as many enrolments as seats. The plan used 40 seats; theory rooms
-/// hold 35 (AppConfig), so the largest legal section is used. The Firestore
-/// transaction must pass the same test.
 void main() {
   test('50 parallel enrol requests on a 35-seat section -> exactly 35 succeed', () async {
     final api = MockApiService(

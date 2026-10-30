@@ -8,7 +8,6 @@ import '../../utils/formatters.dart';
 import '../../widgets/common.dart';
 import '../../widgets/state_views.dart';
 
-/// Regular advising and Extra course windows ON/OFF.
 class WindowsScreen extends StatelessWidget {
   const WindowsScreen({super.key});
 

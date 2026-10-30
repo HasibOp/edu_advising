@@ -11,7 +11,6 @@ import '../../widgets/common.dart';
 import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 
-/// Unofficial transcript (dummy grades in the frontend phase).
 class TranscriptScreen extends StatelessWidget {
   const TranscriptScreen({super.key});
 

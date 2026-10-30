@@ -10,7 +10,6 @@ import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 import 'notice_board_screen.dart';
 
-/// The bell: personal alerts (requests, waitlist, clearance) and new notices.
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
 

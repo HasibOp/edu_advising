@@ -11,7 +11,6 @@ import '../../widgets/badges.dart';
 import '../../widgets/common.dart';
 import '../../widgets/state_views.dart';
 
-/// Notices manager and FAQ manager (create, edit, delete).
 class ContentManagerScreen extends StatelessWidget {
   const ContentManagerScreen({super.key});
 

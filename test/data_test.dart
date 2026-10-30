@@ -2,7 +2,6 @@ import 'package:edu_advising/data/offer_data.dart';
 import 'package:edu_advising/services/catalog.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Checks the generated data against the university documents.
 void main() {
   final catalog = Catalog.instance;
 

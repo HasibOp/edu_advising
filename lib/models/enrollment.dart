@@ -10,10 +10,6 @@ enum EnrollmentType {
 
 enum EnrollmentStatus { enrolled, dropped }
 
-/// A student's seat in one course section.
-///
-/// The ID is "{studentId}_{sectionId}" so a retry or a double tap can never
-/// enroll the same student twice.
 class Enrollment {
   const Enrollment({
     required this.id,
@@ -44,13 +40,11 @@ class Enrollment {
   final int semesterNo;
   final int groupNo;
 
-  /// The actual section the student sits in (can be a split-lab part).
   final int sectionNo;
   final EnrollmentType type;
   final EnrollmentStatus status;
   final DateTime createdAt;
 
-  /// Who enrolled the student (the student, a faculty or the Dean).
   final String byUser;
   final String? droppedBy;
   final DateTime? droppedAt;
@@ -115,7 +109,6 @@ class Enrollment {
       };
 }
 
-/// A place in the queue for a full course section.
 class WaitlistEntry {
   const WaitlistEntry({
     required this.id,
@@ -133,10 +126,8 @@ class WaitlistEntry {
   final String sectionLabel;
   final String title;
 
-  /// Server time of the request; it decides the order.
   final DateTime createdAt;
 
-  /// 1 = next to get a seat.
   final int position;
 
   factory WaitlistEntry.fromJson(Map<String, dynamic> json) => WaitlistEntry(

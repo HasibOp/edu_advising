@@ -8,8 +8,6 @@ import '../models/student.dart';
 import '../services/advising_rules.dart';
 import '../services/api_service.dart';
 
-/// Everything the signed-in student sees: clearance, sections of their
-/// semester, enrolments, waitlist and extra course requests.
 class AdvisingProvider extends ChangeNotifier {
   AdvisingProvider(this._api);
 
@@ -27,7 +25,6 @@ class AdvisingProvider extends ChangeNotifier {
   bool _isBusy = false;
   String? _error;
 
-  /// Course sections ticked on the open section screen.
   final Set<String> _selected = {};
   int? _selectedGroup;
 
@@ -39,7 +36,6 @@ class AdvisingProvider extends ChangeNotifier {
   List<ExtraRequest> get requests => _requests;
   bool get isLoading => _isLoading;
 
-  /// True while a confirm / request call is running.
   bool get isBusy => _isBusy;
   String? get error => _error;
   bool get hasData => _student != null;
@@ -73,7 +69,6 @@ class AdvisingProvider extends ChangeNotifier {
     return null;
   }
 
-  /// The live (not withdrawn) request for a course, if any.
   ExtraRequest? requestFor(String courseCode, RequestKind kind) {
     for (final r in _requests) {
       if (r.courseCode == courseCode && r.kind == kind && r.status.blocksNewRequest) return r;
@@ -121,8 +116,6 @@ class AdvisingProvider extends ChangeNotifier {
     if (_studentId != null) await load(_studentId!);
   }
 
-  // Selection --------------------------------------------------------------
-
   Set<String> get selected => _selected;
   bool isSelected(String sectionId) => _selected.contains(sectionId);
 
@@ -130,7 +123,6 @@ class AdvisingProvider extends ChangeNotifier {
       .where((s) => _selected.contains(s.id))
       .fold(0, (sum, s) => sum + s.credits);
 
-  /// Starts a fresh selection when another section group is opened.
   void openGroup(int groupNo) {
     if (_selectedGroup != groupNo) {
       _selected.clear();
@@ -150,7 +142,6 @@ class AdvisingProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Ticks every course of the group that still has a seat.
   void selectAll(SectionGroup group) {
     for (final s in group.sections) {
       if (canSelect(s)) _selected.add(s.id);
@@ -162,8 +153,6 @@ class AdvisingProvider extends ChangeNotifier {
     _selected.clear();
     notifyListeners();
   }
-
-  // Actions (each throws ApiException with a message for the user) --------
 
   Future<T> _busy<T>(Future<T> Function() action) async {
     _isBusy = true;

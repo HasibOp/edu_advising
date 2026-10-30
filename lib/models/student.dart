@@ -12,7 +12,6 @@ enum ClearanceStatus {
   const ClearanceStatus(this.label, this.remark);
   final String label;
 
-  /// Same wording as the university's Accounts Clearance Status page.
   final String remark;
 
   bool get canAdvise => this != ClearanceStatus.notCleared;
@@ -28,7 +27,6 @@ enum ClearanceType {
   final String label;
 }
 
-/// The clearance rules from the plan, before any Administrator override.
 class ClearanceRules {
   ClearanceRules._();
 
@@ -90,11 +88,8 @@ class Student {
   final double paidAmount;
   final double dues;
 
-  /// Section group (of the student's own semester) the student is locked to
-  /// after the first regular enrolment. Null when nothing is enrolled.
   final int? lockedGroup;
 
-  /// True once the student has at least one regular course.
   final bool advisingDone;
 
   final String phone;
@@ -107,8 +102,6 @@ class Student {
   final String motherName;
   final String emergencyContact;
 
-  /// Profile photo. Empty when none; the mock uses a `data:` URL, Firebase
-  /// Storage will give an https URL.
   final String photoUrl;
 
   String get initials {

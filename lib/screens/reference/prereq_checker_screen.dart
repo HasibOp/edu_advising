@@ -14,7 +14,6 @@ import '../../widgets/common.dart';
 import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 
-/// Pick a course and compare its prerequisites with the transcript.
 class PrereqCheckerScreen extends StatefulWidget {
   const PrereqCheckerScreen({super.key});
 
@@ -50,8 +49,6 @@ class _PrereqCheckerScreenState extends State<PrereqCheckerScreen> {
     );
   }
 
-  /// Every course that has a prerequisite; for a student also whether each
-  /// one is passed.
   Future<void> _pdf(List<TranscriptEntry>? transcript) {
     final catalog = Catalog.instance;
     final passed = {

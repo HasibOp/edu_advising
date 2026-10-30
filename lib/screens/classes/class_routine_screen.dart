@@ -16,8 +16,6 @@ import '../../widgets/state_views.dart';
 
 enum _Mode { mine, section }
 
-/// Weekly class routine. "By section" builds the routine of one section of
-/// a semester from the course codes: CSE 443.3 belongs to Section 3.
 class ClassRoutineScreen extends StatefulWidget {
   const ClassRoutineScreen({super.key, this.semester, this.group});
 
@@ -55,7 +53,6 @@ class _ClassRoutineScreenState extends State<ClassRoutineScreen> {
   List<ClassSlot> _slots(BuildContext context) {
     final catalog = Catalog.instance;
     if (_mode == _Mode.section) {
-      // Every part of a split lab (CSE 114.1 and CSE 114.11) belongs to the section.
       return [
         for (final s in _groupSections)
           for (final p in s.parts) ...catalog.slotsFor(s.courseCode, p.sectionNo),

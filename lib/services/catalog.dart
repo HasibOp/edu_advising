@@ -12,10 +12,8 @@ class Faculty {
 
   final String name;
 
-  /// As written in the routine, e.g. "TRINA" or "Dr. MK".
   final String shortForm;
 
-  // Not in the university documents yet.
   String get email => 'Not provided';
   String get phone => 'Not provided';
   String get position => 'Not provided';
@@ -32,10 +30,6 @@ class Faculty {
   }
 }
 
-/// Read-only reference data built from the generated files in lib/data:
-/// courses, the weekly routine, the exam routine, faculty and prerequisites.
-///
-/// Live data (seats, enrolments, requests) goes through ApiService instead.
 class Catalog {
   Catalog._() {
     for (final row in kRoutine) {
@@ -87,7 +81,6 @@ class Catalog {
     );
   }
 
-  /// "Dr. MK", "dr mk" and "DRMK" all give "DRMK".
   static String facultyKey(String shortForm) =>
       shortForm.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
 
@@ -97,18 +90,15 @@ class Catalog {
   int get semesterCount => kOffer.length;
   List<int> get semesters => kOffer.keys.toList()..sort();
 
-  /// Number of section groups of a semester in the offer list.
   int groupCount(int semesterNo) => kOffer[semesterNo]?.n ?? 0;
 
   List<Course> coursesOf(int semesterNo) => _bySemester[semesterNo] ?? const [];
   Course? course(String code) => _byCode[code];
   String titleOf(String code) => _byCode[code]?.title ?? code;
 
-  /// Weekly classes of one section, e.g. CSE 443 section 3.
   List<ClassSlot> slotsFor(String courseCode, int sectionNo) =>
       _bySection['$courseCode.$sectionNo'] ?? const [];
 
-  /// Faculty short forms teaching a section (theory and lab can differ).
   List<String> facultyFor(String courseCode, int sectionNo) {
     final shorts = <String>[];
     for (final s in slotsFor(courseCode, sectionNo)) {
@@ -126,7 +116,6 @@ class Catalog {
 
   String facultyName(String shortForm) => facultyByShort(shortForm)?.name ?? shortForm;
 
-  /// Every (course, section) a faculty member has in the routine.
   List<(String, int)> sectionsTaughtBy(String shortForm) {
     final key = facultyKey(shortForm);
     final result = <(String, int)>[];
@@ -140,11 +129,8 @@ class Catalog {
 
   List<String> prerequisitesOf(String courseCode) => kPrereq[courseCode] ?? const [];
 
-  /// Exam routine of one semester: (day 1-8, course code).
   List<(int, String)> examsOf(int semesterNo) => kExam[semesterNo] ?? const [];
 
-  /// Exam day (1-8) of a course in its semester's exam routine, or null
-  /// when it has no exam (project courses).
   int? examDay(String courseCode, int semesterNo) {
     for (final (day, code) in examsOf(semesterNo)) {
       if (code == courseCode) return day;
@@ -152,14 +138,12 @@ class Catalog {
     return null;
   }
 
-  /// Seats a room can hold: theory rooms 35, labs 28 (AppConfig).
   int roomCapacity(String courseCode, int sectionNo) {
     final slots = slotsFor(courseCode, sectionNo);
     if (slots.isEmpty) return AppConfig.theoryRoomCapacity;
     return slots.any((s) => !s.isLab) ? AppConfig.theoryRoomCapacity : AppConfig.labRoomCapacity;
   }
 
-  /// Seat structure of the offer list, used to seed the mock backend.
   List<CourseSection> offerSections() {
     final result = <CourseSection>[];
     for (final sem in semesters) {

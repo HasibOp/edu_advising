@@ -11,7 +11,6 @@ class LoadingView extends StatelessWidget {
       const Center(child: CircularProgressIndicator(color: AppColors.primary));
 }
 
-/// Centered icon + message, with an optional action (e.g. retry).
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,
@@ -82,7 +81,6 @@ class ErrorView extends StatelessWidget {
   }
 }
 
-/// Loads data once (and again on [reload]) and shows loading / error states.
 class FutureView<T> extends StatefulWidget {
   const FutureView({super.key, required this.load, required this.builder});
 
@@ -132,7 +130,6 @@ class _FutureViewState<T> extends State<FutureView<T>> {
 String errorText(Object error) =>
     error is ApiException ? error.message : 'Unexpected error: $error';
 
-/// Bold section title with an optional trailing widget (count, button).
 class SectionHeader extends StatelessWidget {
   const SectionHeader(this.title, {super.key, this.trailing, this.padding});
 
@@ -171,8 +168,6 @@ void showAppSnackBar(BuildContext context, String message, {bool isError = false
     ));
 }
 
-/// Runs [action], shows [success] or the error message in a snack bar.
-/// Returns true when it worked.
 Future<bool> runWithFeedback(
   BuildContext context,
   Future<void> Function() action, {
@@ -188,8 +183,6 @@ Future<bool> runWithFeedback(
   }
 }
 
-/// Warns about class-time or exam-day clashes. Resolves to true only when the
-/// user chooses to take the courses anyway.
 Future<bool> conflictDialog(BuildContext context, List<String> conflicts) async {
   final result = await showDialog<bool>(
     context: context,
@@ -233,9 +226,6 @@ Future<bool> conflictDialog(BuildContext context, List<String> conflicts) async 
   return result ?? false;
 }
 
-/// Runs [action]. If it throws a [ConflictException], shows the clashes and,
-/// when the user accepts, runs it again with `acceptConflicts: true`.
-/// Returns null when the user goes back instead.
 Future<T?> runAllowingConflicts<T>(
   BuildContext context,
   Future<T> Function(bool acceptConflicts) action,
@@ -249,7 +239,6 @@ Future<T?> runAllowingConflicts<T>(
   }
 }
 
-/// Yes/no dialog. Resolves to true only when the user confirms.
 Future<bool> confirmDialog(
   BuildContext context, {
   required String title,
@@ -277,7 +266,6 @@ Future<bool> confirmDialog(
   return result ?? false;
 }
 
-/// Dialog with one text field. Returns null when cancelled.
 Future<String?> textInputDialog(
   BuildContext context, {
   required String title,

@@ -11,7 +11,6 @@ import '../../widgets/common.dart';
 import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 
-/// Who did what and when (Administrator and Dean).
 class AuditLogScreen extends StatelessWidget {
   const AuditLogScreen({super.key});
 

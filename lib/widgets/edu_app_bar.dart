@@ -12,10 +12,6 @@ import '../utils/app_config.dart';
 import '../utils/app_theme.dart';
 import 'state_views.dart';
 
-/// White top bar with a thin gold line underneath.
-///
-/// Root screens of a shell show the university brand, the notification bell
-/// and logout; pushed pages show their [title] and a back arrow.
 class EduAppBar extends StatelessWidget implements PreferredSizeWidget {
   const EduAppBar({
     super.key,
@@ -30,7 +26,6 @@ class EduAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? subtitle;
   final List<Widget> actions;
 
-  /// Seal + university name + bell + logout (shell root screens).
   final bool brand;
   final PreferredSizeWidget? bottom;
 
@@ -137,7 +132,6 @@ class LogoutButton extends StatelessWidget {
   }
 }
 
-/// Clears every provider and returns to the login screen.
 void logout(BuildContext context) {
   context.read<AdvisingProvider>().clear();
   context.read<StaffProvider>().clear();

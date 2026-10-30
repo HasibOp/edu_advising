@@ -95,14 +95,13 @@ void main() {
     expect(AdvisingRules.examClashes({'CSE 443': 5}, {'CSE 459': 3}), isEmpty);
     final clashes = AdvisingRules.examClashes({'CSE 443': 5, 'HUM 203': 4}, {'CSE 225': 4});
     expect(clashes, ['Exam day: CSE 225 and HUM 203 are both on Day 4.']);
-    // Two new courses on the same day clash with each other too.
     expect(AdvisingRules.examClashes({}, {'A 1': 2, 'B 2': 2}), hasLength(1));
   });
 
   test('exam days come from the exam routine', () {
     expect(Catalog.instance.examDay('CSE 443', 10), 5);
     expect(Catalog.instance.examDay('HUM 203', 11), 4);
-    expect(Catalog.instance.examDay('CSE 464', 11), isNull); // project course
+    expect(Catalog.instance.examDay('CSE 464', 11), isNull);
   });
 
   test('CSE 464 and CSE 466 have no prerequisite', () {
@@ -138,15 +137,14 @@ void main() {
 
   test('overlapping classes share a day column; others keep the full width', () {
     final a = slot('Sunday', '9.30-11.30');
-    final b = slot('Sunday', '10.00-12.00'); // overlaps a
-    final c = slot('Sunday', '1.00-2.00'); // alone
-    final d = slot('Monday', '9.30-11.30'); // other day
+    final b = slot('Sunday', '10.00-12.00');
+    final c = slot('Sunday', '1.00-2.00');
+    final d = slot('Monday', '9.30-11.30');
     final lanes = layoutRoutineLanes([a, b, c, d]);
     expect(lanes[a], (0, 2));
     expect(lanes[b], (1, 2));
     expect(lanes[c], (0, 1));
     expect(lanes[d], (0, 1));
-    // A third class after the first one ends reuses its lane.
     final e = slot('Sunday', '11.30-1.00');
     final more = layoutRoutineLanes([a, b, e]);
     expect(more[e]!.$2, 2);

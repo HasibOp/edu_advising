@@ -6,8 +6,6 @@ import 'package:edu_advising/services/mock_api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Opens every screen of every role on a phone-sized screen. Any layout
-/// overflow or exception fails the test.
 void main() {
   Future<void> start(WidgetTester tester, {MockApiService? api}) async {
     tester.view.physicalSize = const Size(1080, 2400);
@@ -31,7 +29,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// Scrolls the main vertical list until [finder] is built and visible.
   Future<void> scrollTo(WidgetTester tester, Finder finder) async {
     final vertical = find.byWidgetPredicate(
         (w) => w is Scrollable && w.axisDirection == AxisDirection.down);
@@ -51,7 +48,6 @@ void main() {
     await login(tester, 'Student', '233000001');
     expect(find.text('Ayesha Siddika'), findsOneWidget);
 
-    // Advising: clearance -> sections -> Section 3 -> select all -> confirm.
     await tester.tap(find.text('Start advising'));
     await tester.pumpAndSettle();
     expect(find.textContaining('May proceed for advising', findRichText: true), findsWidgets);
@@ -63,7 +59,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Confirm').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Confirm').last); // dialog
+    await tester.tap(find.text('Confirm').last);
     await tester.pumpAndSettle();
     expect(find.text('Advising confirmed'), findsOneWidget);
     await tester.tap(find.text('OK'));
@@ -78,7 +74,6 @@ void main() {
     await back(tester);
     await back(tester);
 
-    // Every menu page.
     await tester.tap(find.text('Menu').last);
     await tester.pumpAndSettle();
     for (final title in [
@@ -97,7 +92,6 @@ void main() {
       await back(tester);
     }
 
-    // Routine by section, chatbot answer, profile, notifications.
     await openMenu(tester, 'Class routine');
     await tester.tap(find.text('By section'));
     await tester.pumpAndSettle();
@@ -159,7 +153,7 @@ void main() {
     await openMenu(tester, 'Exam routine');
     IconButton pdf() => tester.widget<IconButton>(find.ancestor(
         of: find.byIcon(Icons.picture_as_pdf_outlined), matching: find.byType(IconButton)));
-    expect(pdf().onPressed, isNotNull); // own semester
+    expect(pdf().onPressed, isNotNull);
     await tester.tap(find.text('All'));
     await tester.pumpAndSettle();
     expect(pdf().onPressed, isNull);
@@ -250,8 +244,6 @@ void main() {
     }
   });
 
-  /// A Semester 10 course (section group 3) and a vacant course of another
-  /// semester that meet at the same time.
   Future<(CourseSection, CourseSection)> clashingPair(MockApiService api) async {
     final all = await api.fetchSections();
     for (final a in all.where((s) => s.semesterNo == 10 && s.groupNo == 3)) {
@@ -269,7 +261,6 @@ void main() {
   Future<void> sendExtraRequest(WidgetTester tester, CourseSection b) async {
     await tester.tap(find.text('View advising'));
     await tester.pumpAndSettle();
-    // Already advised: the button reads "Go to Advising".
     await tester.tap(find.text('Go to Advising'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Extra course'));
@@ -288,8 +279,6 @@ void main() {
 
   testWidgets('student: a class-time clash shows an alert and can be accepted', (tester) async {
     final api = MockApiService(latency: Duration.zero);
-    // The mock waits on timers, so calls made outside the widget tree need
-    // real async.
     final (a, b) = (await tester.runAsync(() async {
       final pair = await clashingPair(api);
       await api.enrollSelected('233000001', [pair.$1.id]);
@@ -302,7 +291,7 @@ void main() {
     expect(find.text('Clash found'), findsOneWidget);
     expect(find.textContaining('Class time:'), findsWidgets);
     expect(find.text('Take anyway'), findsOneWidget);
-    expect(await tester.runAsync(() => api.fetchMyRequests('233000001')), isEmpty); // nothing saved yet
+    expect(await tester.runAsync(() => api.fetchMyRequests('233000001')), isEmpty);
 
     await tester.tap(find.text('Take anyway'));
     await tester.pumpAndSettle();
@@ -313,8 +302,6 @@ void main() {
 
   testWidgets('student: going back from a clash alert sends nothing', (tester) async {
     final api = MockApiService(latency: Duration.zero);
-    // The mock waits on timers, so calls made outside the widget tree need
-    // real async.
     final (a, b) = (await tester.runAsync(() async {
       final pair = await clashingPair(api);
       await api.enrollSelected('233000001', [pair.$1.id]);
@@ -343,7 +330,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Day list'));
     await tester.pumpAndSettle();
-    // Semester 2 Section 1 holds PHY 102.1 and PHY 102.11 (two lab rooms).
     expect(find.textContaining('PHY 102.1  '), findsWidgets);
     expect(find.textContaining('PHY 102.11'), findsWidgets);
   });

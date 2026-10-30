@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
 
-/// Colour tokens from the project plan (section 8).
 class AppColors {
   AppColors._();
 
-  /// Login screen and logo areas only.
   static const Color deepMaroon = Color(0xFF5E1236);
 
-  /// Buttons, titles, links, active tab.
   static const Color primary = Color(0xFF861A4C);
 
-  /// Thin line under the top bar.
   static const Color gold = Color(0xFFC9A24B);
 
-  /// Inputs, chips, the Advising card.
   static const Color tint = Color(0xFFF6E7EE);
   static const Color background = Color(0xFFF7F4F5);
   static const Color text = Color(0xFF2A1A22);
@@ -26,7 +21,6 @@ class AppColors {
   static const Color warning = Color(0xFFB7791F);
   static const Color info = Color(0xFF1F5FA8);
 
-  /// Soft fills for routine blocks. A course always gets the same colour.
   static const List<Color> blockColors = [
     Color(0xFFF6E0EA),
     Color(0xFFDCEBFA),
@@ -92,8 +86,6 @@ class AppTheme {
           side: const BorderSide(color: AppColors.border),
         ),
       ),
-      // Inputs keep an explicit dark text colour so they stay readable even
-      // if the phone is in dark mode.
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.tint,

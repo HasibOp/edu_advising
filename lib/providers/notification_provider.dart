@@ -4,7 +4,6 @@ import '../models/app_user.dart';
 import '../models/portal.dart';
 import '../services/api_service.dart';
 
-/// Notices and personal notifications behind the bell badge.
 class NotificationProvider extends ChangeNotifier {
   NotificationProvider(this._api);
 
@@ -42,7 +41,7 @@ class NotificationProvider extends ChangeNotifier {
       _readNotices = results[2] as Set<String>;
       notifyListeners();
     } on ApiException {
-      // The badge is optional; keep the old values.
+      return;
     }
   }
 

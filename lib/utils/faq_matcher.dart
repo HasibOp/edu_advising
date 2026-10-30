@@ -1,7 +1,5 @@
 import '../models/portal.dart';
 
-/// Offline FAQ bot, step 1 of the plan: keyword and word-overlap matching.
-/// Only FAQ text is searched; no personal data is ever used.
 class FaqMatcher {
   FaqMatcher._();
 
@@ -35,7 +33,6 @@ class FaqMatcher {
     return score;
   }
 
-  /// Best FAQ for [question], or null when nothing is close enough.
   static Faq? bestMatch(List<Faq> faqs, String question) {
     Faq? best;
     var bestScore = 0;

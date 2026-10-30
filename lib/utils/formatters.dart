@@ -3,10 +3,8 @@ import 'package:intl/intl.dart';
 class Formatters {
   Formatters._();
 
-  /// "CSE 443" + 3 -> "CSE 443.3". The number after the dot is the section.
   static String sectionLabel(String courseCode, int sectionNo) => '$courseCode.$sectionNo';
 
-  /// 3.0 -> "3", 1.5 -> "1.5".
   static String credits(double value) =>
       value == value.roundToDouble() ? value.toInt().toString() : value.toString();
 
@@ -25,10 +23,8 @@ class Formatters {
     return date(value);
   }
 
-  /// Routine time "11.30-1.00" -> "11:30 - 1:00".
   static String routineTime(String time) => time.replaceAll('.', ':').replaceAll('-', ' - ');
 
-  /// 600 -> "10:00".
   static String clock(int minute) {
     var hour = minute ~/ 60;
     if (hour > 12) hour -= 12;

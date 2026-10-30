@@ -11,7 +11,6 @@ import '../admin/admin_shell.dart';
 import '../staff/staff_shell.dart';
 import '../student/student_shell.dart';
 
-/// One login page for everyone. The role selector must match the account.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 

@@ -14,7 +14,6 @@ import '../../widgets/common.dart';
 import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 
-/// CSE Course Offer List & Section Structures, with live seats.
 class OfferListScreen extends StatefulWidget {
   const OfferListScreen({super.key});
 

@@ -11,7 +11,6 @@ import '../../widgets/common.dart';
 import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 
-/// Opens a notice and marks it as read.
 Future<void> showNotice(BuildContext context, Notice notice) {
   context.read<NotificationProvider>().markNoticeRead(notice.id);
   return showModalBottomSheet<void>(

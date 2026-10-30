@@ -11,8 +11,6 @@ import '../../widgets/badges.dart';
 import '../../widgets/common.dart';
 import '../../widgets/state_views.dart';
 
-/// Every student as Cleared / Special consideration / Not cleared, with
-/// Give clearance and Revoke. Payment data itself is checked outside the app.
 class ClearanceListScreen extends StatefulWidget {
   const ClearanceListScreen({super.key});
 

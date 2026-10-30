@@ -5,7 +5,6 @@ import '../models/extra_request.dart';
 import '../models/student.dart';
 import '../utils/app_theme.dart';
 
-/// Small rounded label with a coloured background.
 class StatusPill extends StatelessWidget {
   const StatusPill(this.label, {super.key, required this.color, this.icon, this.solid = false});
 
@@ -13,7 +12,6 @@ class StatusPill extends StatelessWidget {
   final Color color;
   final IconData? icon;
 
-  /// Filled background with white text instead of a soft tint.
   final bool solid;
 
   @override
@@ -77,7 +75,6 @@ class ClearanceBadge extends StatelessWidget {
       );
 }
 
-/// FULL (red), "X left" (gold) at 5 or fewer seats, otherwise OPEN (green).
 class SeatBadge extends StatelessWidget {
   const SeatBadge(this.section, {super.key, this.showCount = true});
 
@@ -91,8 +88,6 @@ class SeatBadge extends StatelessWidget {
       SeatLevel.low => ('${section.seatsLeft} LEFT', AppColors.warning),
       SeatLevel.open => ('OPEN', AppColors.success),
     };
-    // Wrap, not Row: on a narrow phone or with a large font the pill drops to
-    // the next line instead of overflowing.
     return Wrap(
       spacing: 6,
       runSpacing: 2,

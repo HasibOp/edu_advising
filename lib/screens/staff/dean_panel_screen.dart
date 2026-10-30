@@ -12,7 +12,6 @@ import '../common/audit_log_screen.dart';
 import 'my_courses_screen.dart';
 import 'section_detail_screen.dart';
 
-/// Dean extras: overview, seats of every section, audit log.
 class DeanPanelScreen extends StatefulWidget {
   const DeanPanelScreen({super.key});
 

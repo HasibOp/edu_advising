@@ -13,7 +13,6 @@ import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 import 'section_detail_screen.dart';
 
-/// Sections the signed-in faculty teaches this semester.
 class MyCoursesScreen extends StatelessWidget {
   const MyCoursesScreen({super.key});
 

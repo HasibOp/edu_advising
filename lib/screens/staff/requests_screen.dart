@@ -11,7 +11,6 @@ import '../../widgets/badges.dart';
 import '../../widgets/common.dart';
 import '../../widgets/state_views.dart';
 
-/// Extra course requests for the faculty's own courses (Dean: all).
 class RequestsScreen extends StatefulWidget {
   const RequestsScreen({super.key});
 

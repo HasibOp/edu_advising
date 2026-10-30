@@ -26,8 +26,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
-  # Poppins is bundled (OFL licence in assets/fonts/OFL.txt) so the app
-  # looks the same offline.
   fonts:
     - family: Poppins
       fonts:

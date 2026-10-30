@@ -10,7 +10,6 @@ import 'my_courses_screen.dart';
 import 'requests_screen.dart';
 import 'student_search_screen.dart';
 
-/// Instructor app. Dr. MK (isDean) also gets the Dean tab.
 class StaffShell extends StatefulWidget {
   const StaffShell({super.key});
 

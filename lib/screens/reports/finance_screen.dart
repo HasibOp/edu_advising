@@ -13,8 +13,6 @@ import '../../widgets/common.dart';
 import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 
-/// Fees, payments and dues. Payments are recorded by Accounts; there is no
-/// payment gateway in the app.
 class FinanceScreen extends StatelessWidget {
   const FinanceScreen({super.key});
 

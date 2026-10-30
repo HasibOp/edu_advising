@@ -10,7 +10,6 @@ import '../../widgets/common.dart';
 import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 
-/// Final exam routine, Day 1 to Day 8. PDF is one semester at a time.
 class ExamRoutineScreen extends StatefulWidget {
   const ExamRoutineScreen({super.key});
 
@@ -19,7 +18,6 @@ class ExamRoutineScreen extends StatefulWidget {
 }
 
 class _ExamRoutineScreenState extends State<ExamRoutineScreen> {
-  /// 0 = all semesters.
   late int _semester = context.read<AdvisingProvider>().student?.semesterNo ?? 0;
 
   Future<void> _pdf() {

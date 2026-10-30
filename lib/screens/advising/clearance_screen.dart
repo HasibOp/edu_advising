@@ -12,7 +12,6 @@ import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 import 'advising_screen.dart';
 
-/// Menu -> Advising always starts here: the accounts clearance check.
 class ClearanceScreen extends StatelessWidget {
   const ClearanceScreen({super.key});
 

@@ -1,4 +1,3 @@
-/// One weekly class from the routine, e.g. CSE 443.3 on Sunday 10.00-11.30.
 class ClassSlot {
   const ClassSlot({
     required this.day,
@@ -16,20 +15,16 @@ class ClassSlot {
   final String day;
   final bool isLab;
 
-  /// As printed in the routine, e.g. "11.30-1.00".
   final String time;
 
-  /// Minutes after midnight, so 1.00 pm is 780.
   final int startMinute;
   final int endMinute;
   final String room;
   final String courseCode;
 
-  /// Null for slots printed without a section (e.g. "EEE 453").
   final int? sectionNo;
   final String faculty;
 
-  /// Slot of the EEE department, printed as "PHY 101 (EEE)".
   final bool isEee;
 
   String get label => sectionNo == null ? courseCode : '$courseCode.$sectionNo';
@@ -39,7 +34,6 @@ class ClassSlot {
       startMinute < other.endMinute &&
       other.startMinute < endMinute;
 
-  /// Parses "8.30-10.00" / "1.30-3.00". Hours before 8 are afternoon.
   static (int, int) parseTime(String time) {
     int toMinutes(String part) {
       final pieces = part.trim().split('.');

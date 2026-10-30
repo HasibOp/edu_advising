@@ -12,7 +12,6 @@ import '../../widgets/common.dart';
 import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 
-/// The courses of one section with checkboxes, Select all and Confirm.
 class SectionCoursesScreen extends StatefulWidget {
   const SectionCoursesScreen({super.key, required this.groupNo});
 
@@ -43,7 +42,6 @@ class _SectionCoursesScreenState extends State<SectionCoursesScreen> {
     try {
       final result = await runAllowingConflicts(
           context, (accept) => a.confirmSelection(acceptConflicts: accept));
-      // null: the student went back after seeing a clash. Nothing was saved.
       if (result == null || !mounted) return;
       context.read<NotificationProvider>().refresh();
       await showDialog<void>(
@@ -211,7 +209,6 @@ class _CourseTile extends StatelessWidget {
   final CourseSection section;
   final bool viewOnly;
 
-  /// A clash is an alert, not a block: the student may still join.
   Future<void> _joinWaitlist(BuildContext context, AdvisingProvider a) async {
     try {
       final entry = await runAllowingConflicts(
@@ -233,7 +230,6 @@ class _CourseTile extends StatelessWidget {
     final waiting = a.waitlistFor(s.id);
     final missing = a.missingPrerequisites(s.courseCode);
     final selected = a.isSelected(s.id);
-    // A split lab puts the student in the first part that still has a seat.
     final part = s.nextPart ?? s.parts.first;
     final slots = Catalog.instance.slotsFor(s.courseCode, part.sectionNo);
 

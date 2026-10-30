@@ -16,7 +16,6 @@ class _Message {
   final Faq? faq;
 }
 
-/// FAQ-only assistant: rules, deadlines, fees, clearance, waitlist.
 class FaqChatbotScreen extends StatefulWidget {
   const FaqChatbotScreen({super.key});
 

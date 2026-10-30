@@ -15,8 +15,6 @@ import '../../widgets/common.dart';
 import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 
-/// Faculty / Dean advising for one student: drop and add directly, no
-/// request needed. Faculty only touch their own courses; the Dean any.
 class StaffAdviseScreen extends StatefulWidget {
   const StaffAdviseScreen({super.key, required this.studentId});
 

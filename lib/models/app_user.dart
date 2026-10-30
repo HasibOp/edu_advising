@@ -7,7 +7,6 @@ enum UserRole {
   final String label;
 }
 
-/// The signed-in account. The role decides which shell opens after login.
 class AppUser {
   const AppUser({
     required this.id,
@@ -17,22 +16,18 @@ class AppUser {
     this.shortName,
   });
 
-  /// Login ID: the student ID, the faculty short form, or "admin".
   final String id;
   final UserRole role;
   final String name;
 
-  /// Dr. MK signs in as an instructor and gets the Dean tools on top.
   final bool isDean;
 
-  /// Faculty short form as written in the routine, e.g. "TRINA".
   final String? shortName;
 
   bool get isStudent => role == UserRole.student;
   bool get isStaff => role == UserRole.instructor;
   bool get isAdmin => role == UserRole.admin;
 
-  /// Role label shown in the UI and the audit log.
   String get roleLabel => isDean ? 'Dean' : role.label;
 
   factory AppUser.fromJson(Map<String, dynamic> json) => AppUser(

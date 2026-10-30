@@ -5,7 +5,6 @@ import '../models/portal.dart';
 import '../models/student.dart';
 import '../services/api_service.dart';
 
-/// Administrator data: the clearance list and the advising windows.
 class AdminProvider extends ChangeNotifier {
   AdminProvider(this._api);
 

@@ -11,8 +11,6 @@ import '../../widgets/badges.dart';
 import '../../widgets/common.dart';
 import '../../widgets/state_views.dart';
 
-/// Courses and sections of each semester: add, edit, delete; open or close a
-/// whole section. Seat numbers are changed by faculty / the Dean.
 class CoursesManagerScreen extends StatefulWidget {
   const CoursesManagerScreen({super.key});
 

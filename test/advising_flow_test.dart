@@ -12,7 +12,6 @@ import 'package:edu_advising/services/catalog.dart';
 import 'package:edu_advising/services/mock_api_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// The testing checklist of the plan (section 19), run against the mock.
 void main() {
   late MockApiService api;
   const dean = AppUser(
@@ -51,7 +50,6 @@ void main() {
     expect(student.lockedGroup, 3);
     expect(student.advisingDone, isTrue);
 
-    // Other sections are now view-only.
     final other = await section('CSE 443', 10, 5);
     expect(() => api.enrollSelected('233000001', [other.id]), throwsA(isA<ApiException>()));
   });
@@ -65,7 +63,6 @@ void main() {
   });
 
   test('enrolment is all-or-nothing (prerequisite failure)', () async {
-    // 233000005 failed CSE 327, the prerequisite of CSE 443 and CSE 463.
     final sections = await group(10, 3);
     final before = {for (final s in sections) s.id: s.enrolled};
     await expectLater(
@@ -84,9 +81,8 @@ void main() {
     expect(() => api.enrollSelected('233000001', [full.id]), throwsA(isA<ApiException>()));
 
     final w = await api.joinWaitlist('233000001', full.id);
-    expect(w.position, 2); // 233000012 was first.
+    expect(w.position, 2);
 
-    // Dean adds a seat: the first student on the waitlist gets it.
     await api.changeSeats(dean, full.id, full.capacity + 1);
     final rumana = await api.fetchEnrollments('233000012');
     expect(rumana.map((e) => e.label), contains('CSE 443.1'));
@@ -102,7 +98,7 @@ void main() {
     expect(() => api.staffDrop(student, e443.id), throwsA(isA<ApiException>()));
     expect(() => api.staffDrop(trina, e443.id), throwsA(isA<ApiException>()));
 
-    await api.staffDrop(trina, e463.id); // TRINA teaches CSE 463.2
+    await api.staffDrop(trina, e463.id);
     await api.staffDrop(dean, e443.id);
     final left = await api.fetchEnrollments('233000002');
     expect(left.map((e) => e.courseCode), ['CSE 439']);
@@ -216,7 +212,6 @@ void main() {
     final mine = await section('CSE 463', 10, 3);
     await expectLater(api.staffAdvise(trina, '233000001', [mine.id]),
         throwsA(predicate((e) => e.toString().contains('regular advising window'))));
-    // The Dean skips clearance, not the window.
     await expectLater(api.staffAdvise(dean, '233000001', [mine.id]), throwsA(isA<ApiException>()));
     expect(await api.fetchEnrollments('233000001'), isEmpty);
 
@@ -237,8 +232,6 @@ void main() {
   });
 
   test('there is no credit limit', () async {
-    // Semester 10 section 3 plus all of Semester 9 section 1 as extra courses:
-    // far above the old limit of 21 credits. (Clashes are accepted here.)
     await api.enrollSelected('233000001', [for (final s in await group(10, 3)) s.id]);
     final extra = [
       for (final s in (await api.fetchSections(semesterNo: 9)).where((s) => s.groupNo == 1)) s.id
@@ -249,7 +242,6 @@ void main() {
     expect(total, greaterThan(21));
   });
 
-  /// A Semester 10 course and a Semester 9 course that meet at the same time.
   Future<(CourseSection, CourseSection)> clashingPair() async {
     final mine = await group(10, 3);
     final other = await api.fetchSections(semesterNo: 9);
@@ -275,7 +267,7 @@ void main() {
       throwsA(isA<ConflictException>()
           .having((e) => e.conflicts.first, 'first', startsWith('Class time:'))),
     );
-    expect((await api.fetchEnrollments('233000001')).length, before); // nothing saved
+    expect((await api.fetchEnrollments('233000001')).length, before);
 
     final added = await api.staffAdvise(dean, '233000001', [b.id], acceptConflicts: true);
     expect(added.single.type, EnrollmentType.extra);
@@ -299,7 +291,6 @@ void main() {
   });
 
   test('an exam on the same day is a warning too', () async {
-    // 233000006 is in Semester 11: HUM 203 is exam Day 4, like CSE 225 (Sem 5).
     final hum = (await api.fetchSections(semesterNo: 11)).firstWhere((s) => s.courseCode == 'HUM 203');
     await api.enrollSelected('233000006', [hum.id]);
     final extra = await section('CSE 225', 5, 6);
@@ -315,7 +306,6 @@ void main() {
   });
 
   test('a hard error still blocks even when clashes are accepted', () async {
-    // 233000005 failed CSE 327: the prerequisite of CSE 443 is not a warning.
     final s = await section('CSE 443', 10, 3);
     await expectLater(
       api.enrollSelected('233000005', [s.id], acceptConflicts: true),
@@ -324,7 +314,6 @@ void main() {
   });
 
   test('a clash on the waitlist warns once; a freed seat still enrols the student', () async {
-    // A full Semester 10 Section 1 course that clashes with an extra course.
     final full = (await group(10, 1)).where((s) => s.isFull).toList();
     final others = (await api.fetchSections()).where((s) => s.semesterNo != 10 && !s.isFull);
     CourseSection? fullPick;
@@ -350,7 +339,6 @@ void main() {
     expect(await api.fetchWaitlist('233000001'), isEmpty);
     await api.joinWaitlist('233000001', fullPick.id, acceptConflicts: true);
 
-    // A seat frees up: the student is enrolled in spite of the clash.
     await api.changeSeats(dean, fullPick.id, fullPick.capacity + 1);
     final mine = await api.fetchEnrollments('233000001');
     expect(mine.map((e) => e.courseCode), contains(fullPick.courseCode));

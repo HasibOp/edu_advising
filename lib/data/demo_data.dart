@@ -1,7 +1,3 @@
-// Dummy people for the frontend demo. Not real students: the plan says to
-// never use real IDs or names from portal screenshots.
-
-/// A demo student: who they are and their Fall 2026 account.
 class DemoStudent {
   const DemoStudent({
     required this.id,
@@ -22,7 +18,6 @@ class DemoStudent {
   final String name;
   final int semesterNo;
 
-  /// 'F' or 'M', only used to pick dummy parent names.
   final String gender;
   final double semesterFee;
   final double waiver;
@@ -31,10 +26,8 @@ class DemoStudent {
   final bool specialConsideration;
   final double requiredAmount;
 
-  /// Courses with an F grade (to demo the prerequisite check).
   final List<String> failed;
 
-  /// What this account demonstrates (shown on the login screen help).
   final String note;
 }
 
@@ -169,7 +162,6 @@ const List<DemoStudent> kDemoStudents = [
   ),
 ];
 
-/// Dummy profile pieces, picked by index.
 const List<String> kDemoFathers = [
   'Abdul Karim', 'Mohammad Ali', 'Nurul Islam', 'Abul Kalam', 'Jamal Uddin',
   'Rafiqul Alam', 'Shahadat Hossain',

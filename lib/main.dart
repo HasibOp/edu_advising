@@ -19,8 +19,6 @@ void main() {
 class EduAdvisingApp extends StatelessWidget {
   const EduAdvisingApp({super.key, required this.api});
 
-  /// Swap [MockApiService] for the Firebase implementation in the backend
-  /// phase. Nothing else needs to change.
   final ApiService api;
 
   @override

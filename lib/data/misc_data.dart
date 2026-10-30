@@ -1,25 +1,11 @@
-// Hand-written reference data. The university documents do not include
-// notices or FAQ answers, so those are sensible defaults for the demo.
-// kPrereq is transcribed from the official course catalog (166 credits).
-
-/// Course -> courses that must be passed first, from the course catalog.
-/// Courses with no prerequisite (and labs printed with a blank cell) are
-/// left out.
-///
-/// CSE 464 and CSE 466 have no prerequisite on purpose: the catalog names
-/// courses for them (CSE 445, CSE 227) that exist nowhere, and the team chose
-/// to skip them.
 const Map<String, List<String>> kPrereq = {
-  // Language and mathematics
   'ENG 111': ['AA 099'],
   'MATH 107': ['AA 150'],
   'MATH 203': ['MATH 107'],
   'MATH 205': ['MATH 107'],
   'MATH 207': ['MATH 107'],
   'MATH 301': ['MATH 107'],
-  // Interdisciplinary
   'CSE 223': ['CSE 215'],
-  // Program core
   'CSE 113': ['CSE 111'],
   'CSE 123': ['CSE 113'],
   'CSE 115': ['CSE 113'],
@@ -38,7 +24,6 @@ const Map<String, List<String>> kPrereq = {
   'CSE 411': ['CSE 123', 'CSE 211'],
   'CSE 463': ['CSE 225', 'CSE 327'],
   'CSE 443': ['CSE 327'],
-  // Options
   'CSE 301': ['CSE 325', 'CSE 311', 'CSE 225'],
   'CSE 429': ['CSE 225', 'CSE 221'],
   'CSE 439': ['CSE 321'],
@@ -53,7 +38,6 @@ const Map<String, List<String>> kPrereq = {
   'ETE 317': ['CSE 215', 'EEE 213'],
 };
 
-/// Seed notices: (title, body, category, pinned, days ago).
 const List<(String, String, String, bool, int)> kNotices = [
   (
     'Fall 2026 advising is open',
@@ -112,7 +96,6 @@ const List<(String, String, String, bool, int)> kNotices = [
   ),
 ];
 
-/// Seed FAQs: (question, answer, category, keywords).
 const List<(String, String, String, List<String>)> kFaq = [
   (
     'How do I do my advising?',

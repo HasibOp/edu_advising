@@ -5,10 +5,6 @@ import 'package:printing/printing.dart';
 
 import 'formatters.dart';
 
-/// Builds the PDFs behind every "Download PDF" button.
-///
-/// Text is plain ASCII because the built-in PDF font (Helvetica) cannot
-/// draw most Unicode symbols.
 class PdfExport {
   PdfExport._();
 
@@ -30,7 +26,6 @@ class PdfExport {
     return _seal;
   }
 
-  /// One table, with the university header. Opens the share/save sheet.
   static Future<void> shareTable({
     required String title,
     required String filename,

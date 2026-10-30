@@ -7,7 +7,6 @@ import '../../widgets/common.dart';
 import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 
-/// The 55 SoSET faculty, searchable by name or short form.
 class FacultyDirectoryScreen extends StatefulWidget {
   const FacultyDirectoryScreen({super.key});
 

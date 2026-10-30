@@ -6,7 +6,6 @@ import '../models/extra_request.dart';
 import '../services/api_service.dart';
 import '../services/catalog.dart';
 
-/// Instructor and Dean data: their sections and the request inbox.
 class StaffProvider extends ChangeNotifier {
   StaffProvider(this._api);
 
@@ -26,8 +25,6 @@ class StaffProvider extends ChangeNotifier {
 
   int get pendingCount => _requests.where((r) => r.isPending).length;
 
-  /// Same ownership rule as the backend: a faculty owns a section when the
-  /// routine lists them for any part of it. The Dean owns everything.
   static bool owns(AppUser user, CourseSection s) {
     if (user.isDean) return true;
     final short = user.shortName;
@@ -35,7 +32,6 @@ class StaffProvider extends ChangeNotifier {
     return s.parts.any((p) => Catalog.instance.teaches(short, s.courseCode, p.sectionNo));
   }
 
-  /// Sections the faculty teaches (for the Dean: only the ones they teach).
   List<CourseSection> get mySections {
     final short = _user?.shortName;
     if (short == null) return const [];

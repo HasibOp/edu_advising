@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../utils/app_theme.dart';
 
-/// White rounded card with the app border.
 class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
@@ -22,7 +21,6 @@ class AppCard extends StatelessWidget {
   final Color? color;
   final Color? borderColor;
 
-  /// Thick coloured edge on the left (used for the Advising card).
   final Color? leftAccent;
 
   @override
@@ -52,7 +50,6 @@ class AppCard extends StatelessWidget {
   }
 }
 
-/// Label on the left, value on the right.
 class InfoRow extends StatelessWidget {
   const InfoRow(this.label, this.value, {super.key, this.valueColor, this.bold = false});
 
@@ -91,7 +88,6 @@ class InfoRow extends StatelessWidget {
   }
 }
 
-/// Small number + caption tile used in summaries.
 class StatTile extends StatelessWidget {
   const StatTile({
     super.key,
@@ -131,7 +127,6 @@ class StatTile extends StatelessWidget {
   }
 }
 
-/// Coloured info/warning strip.
 class NoticeBanner extends StatelessWidget {
   const NoticeBanner({
     super.key,
@@ -190,16 +185,13 @@ class Avatar extends StatelessWidget {
   final String initials;
   final double size;
 
-  /// White circle with maroon text (for dark backgrounds).
   final bool light;
 
-  /// Shown instead of the initials when set (`data:` or https URL).
   final String photoUrl;
 
   static String? _cachedUrl;
   static ImageProvider? _cachedImage;
 
-  /// Decodes a `data:` URL once, so rebuilds do not flicker.
   static ImageProvider? _image(String url) {
     if (url.isEmpty) return null;
     if (url == _cachedUrl) return _cachedImage;
@@ -238,7 +230,6 @@ class Avatar extends StatelessWidget {
   }
 }
 
-/// Horizontal row of selectable chips (semester / section pickers).
 class ChoiceChipsRow<T> extends StatelessWidget {
   const ChoiceChipsRow({
     super.key,
@@ -292,7 +283,6 @@ class ChoiceChipsRow<T> extends StatelessWidget {
   }
 }
 
-/// Search field with the app styling.
 class SearchField extends StatelessWidget {
   const SearchField({super.key, required this.hint, required this.onChanged, this.controller});
 

@@ -1,5 +1,3 @@
-/// Smaller portal records: advising windows, notices, FAQs, notifications,
-/// audit log, transcript and finance.
 library;
 
 class AdvisingWindows {
@@ -121,8 +119,6 @@ class Faq {
       };
 }
 
-/// A personal alert shown under the bell (request decided, waitlist
-/// promotion, new request for a faculty, ...).
 class AppNotification {
   const AppNotification({
     required this.id,
@@ -223,7 +219,6 @@ class TranscriptEntry {
   final double credits;
   final int semesterNo;
 
-  /// e.g. "Summer 2026".
   final String term;
   final String grade;
   final double gradePoint;
@@ -243,13 +238,11 @@ class Payment {
   final DateTime date;
   final double amount;
 
-  /// "E-payment" or "Bank deposit".
   final String type;
   final String txnId;
   final String verifiedBy;
 }
 
-/// Account summary. Payments are recorded by Accounts; there is no gateway.
 class FinanceSummary {
   const FinanceSummary({
     required this.semesterFee,
@@ -265,7 +258,6 @@ class FinanceSummary {
   final double previousDues;
   final double paid;
 
-  /// Amount needed for advising under special consideration.
   final double requiredAmount;
   final List<Payment> payments;
 

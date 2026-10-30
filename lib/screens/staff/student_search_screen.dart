@@ -13,7 +13,6 @@ import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 import 'staff_advise_screen.dart';
 
-/// Search a student by ID -> clearance page -> start advising.
 class StudentSearchScreen extends StatefulWidget {
   const StudentSearchScreen({super.key});
 

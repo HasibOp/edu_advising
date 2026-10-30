@@ -17,8 +17,6 @@ import '../../widgets/edu_app_bar.dart';
 import '../../widgets/state_views.dart';
 import 'staff_advise_screen.dart';
 
-/// Shows the seat-change dialog: not above room capacity, not below the
-/// current enrolment. Returns true when seats changed.
 Future<bool> changeSeatsDialog(BuildContext context, CourseSection s) async {
   final main = s.parts.first;
   final room = Catalog.instance.roomCapacity(s.courseCode, main.sectionNo);
@@ -46,7 +44,6 @@ Future<bool> changeSeatsDialog(BuildContext context, CourseSection s) async {
   );
 }
 
-/// Roster of one section with seat change and drop.
 class SectionDetailScreen extends StatefulWidget {
   const SectionDetailScreen({super.key, required this.sectionId});
 

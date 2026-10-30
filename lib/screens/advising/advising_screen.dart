@@ -13,7 +13,6 @@ import '../../widgets/state_views.dart';
 import 'extra_course_tab.dart';
 import 'section_courses_screen.dart';
 
-/// Advising after the clearance check: Regular | Extra course | Waitlist.
 class AdvisingScreen extends StatelessWidget {
   const AdvisingScreen({super.key, this.initialTab = 0});
 

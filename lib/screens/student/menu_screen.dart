@@ -23,7 +23,6 @@ class MenuItemData {
   final Widget Function() page;
 }
 
-/// Grouped menu, like the university portal.
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
 
@@ -89,7 +88,6 @@ class MenuScreen extends StatelessWidget {
   }
 }
 
-/// Reusable grouped list (also used by the instructor "More" tab).
 class MenuList extends StatelessWidget {
   const MenuList({super.key, required this.groups});
 

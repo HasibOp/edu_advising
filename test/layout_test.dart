@@ -3,14 +3,11 @@ import 'package:edu_advising/services/mock_api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Opens every screen of every role on small phones and with large system
-/// fonts. A RenderFlex overflow or any other exception fails the test.
 void main() {
-  // (logical width, logical height, text scale)
   const setups = <(double, double, double)>[
-    (360, 740, 1.0), // common small Android phone
-    (320, 568, 1.0), // very small phone
-    (360, 740, 1.3), // large system font
+    (360, 740, 1.0),
+    (320, 568, 1.0),
+    (360, 740, 1.3),
   ];
 
   Future<void> start(WidgetTester tester, (double, double, double) setup) async {
@@ -24,7 +21,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// True when [finder] matches something (".first" of nothing counts as no).
   bool present(Finder finder) {
     try {
       return finder.evaluate().isNotEmpty;
@@ -33,7 +29,6 @@ void main() {
     }
   }
 
-  /// Drags the main list down until [finder] has been built.
   Future<void> scrollTo(WidgetTester tester, Finder finder) async {
     final vertical = find.byWidgetPredicate(
         (w) => w is Scrollable && w.axisDirection == AxisDirection.down);
@@ -43,10 +38,8 @@ void main() {
     }
   }
 
-  /// Scrolls the target into view like a user would, then taps it.
   Future<void> tap(WidgetTester tester, Finder finder) async {
     if (!present(finder)) {
-      // Not built yet: go back to the top of the list, then scroll down to it.
       final lists = find.byWidgetPredicate(
           (w) => w is Scrollable && w.axisDirection == AxisDirection.down);
       if (lists.evaluate().isNotEmpty) {
@@ -57,8 +50,6 @@ void main() {
     }
     await tester.ensureVisible(finder);
     await tester.pumpAndSettle();
-    // Collect layout errors while the widgets are alive, so the report can
-    // name the widget that overflowed.
     final captured = <FlutterErrorDetails>[];
     final original = FlutterError.onError;
     FlutterError.onError = (details) => captured.add(details);
@@ -80,7 +71,6 @@ void main() {
     await tap(tester, find.text('Sign in'));
   }
 
-  /// The Android system back button.
   Future<void> back(WidgetTester tester) async {
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
@@ -89,7 +79,6 @@ void main() {
 
   Future<void> openMenu(WidgetTester tester, String title) async {
     final item = find.text(title);
-    // The menu stays scrolled where the user left it: start from the top.
     final lists = find.byWidgetPredicate(
         (w) => w is Scrollable && w.axisDirection == AxisDirection.down);
     await tester.fling(lists.last, const Offset(0, 4000), 4000);
@@ -115,7 +104,7 @@ void main() {
       await tap(tester, find.text('Section 3'));
       await tap(tester, find.text('Select all'));
       await tap(tester, find.text('Confirm').last);
-      await tester.tap(find.text('Confirm').last); // dialog
+      await tester.tap(find.text('Confirm').last);
       await tester.pumpAndSettle();
       await tap(tester, find.text('OK'));
       await back(tester);
@@ -123,9 +112,8 @@ void main() {
       await tap(tester, find.text('Extra course'));
       await tap(tester, find.widgetWithText(FilledButton, 'Request').first);
       await tap(tester, find.text('Retake'));
-      await back(tester); // closes the request sheet
+      await back(tester);
       await tap(tester, find.textContaining('Waitlist ('));
-      // Back out to the Home tab (closing any sheet or page on the way).
       for (var i = 0; i < 5 && !present(find.byType(NavigationBar)); i++) {
         await back(tester);
       }
@@ -151,7 +139,6 @@ void main() {
         await back(tester);
       }
 
-      // Routine of a split-lab section, both views.
       await openMenu(tester, 'Class routine');
       await tap(tester, find.text('By section'));
       await tap(tester, find.text('Semester 2'));

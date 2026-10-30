@@ -27,14 +27,9 @@ enum RequestStatus {
   const RequestStatus(this.label);
   final String label;
 
-  /// Withdrawn requests free the course so it can be requested again.
   bool get blocksNewRequest => this != RequestStatus.withdrawn;
 }
 
-/// A student's request to add or drop an extra (open credit) course.
-///
-/// ID is "{studentId}_{courseCode}_{kind}": one add and one drop request per
-/// course.
 class ExtraRequest {
   const ExtraRequest({
     required this.id,
